@@ -3,18 +3,16 @@
  * WeChatHelper Plugin
  *
  * @license    GNU General Public License 2.0
- * 
+ *
  */
-
 class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     private $db;
-
     private $_textTpl;
     private $_imageTpl;
     private $_itemTpl;
     private $_imageNum;
-    
+
     public function __construct($request, $response, $params = NULL)
     {
         parent::__construct($request, $response, $params);
@@ -22,7 +20,6 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->db = Typecho_Db::get();
         $this->_imageNum = Helper::options()->plugin('WeChatHelper')->imageNum;
         $this->_tulingApi = Helper::options()->plugin('WeChatHelper')->tulingApi;
-
         $this->_imageDefault = Helper::options()->plugin('WeChatHelper')->imageDefault;
         $this->_textTpl = "<xml>
                             <ToUserName><![CDATA[%s]]></ToUserName>
@@ -31,7 +28,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                             <MsgType><![CDATA[text]]></MsgType>
                             <Content><![CDATA[%s]]></Content>
                             <FuncFlag>0</FuncFlag>
-                            </xml>"; 
+                            </xml>";
         $this->_imageTpl = "<xml>
                              <ToUserName><![CDATA[%s]]></ToUserName>
                              <FromUserName><![CDATA[%s]]></FromUserName>
@@ -42,7 +39,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                              <FuncFlag>1</FuncFlag>
                              </xml>";
         $this->_itemTpl = "<item>
-                             <Title><![CDATA[%s]]></Title> 
+                             <Title><![CDATA[%s]]></Title>
                              <Description><![CDATA[%s]]></Description>
                              <PicUrl><![CDATA[%s]]></PicUrl>
                              <Url><![CDATA[%s]]></Url>
@@ -51,7 +48,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 
     /**
      * 链接重定向
-     * 
+     *
      */
     public function link()
     {
@@ -65,7 +62,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 
     /**
      * 校验
-     * 
+     *
      */
     public function getAction(){
         $_token = Helper::options()->plugin('WeChatHelper')->token;
@@ -79,19 +76,17 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 
     /**
      * 数据
-     * 
+     *
      */
     public function postAction(){
-        $postStr = file_get_contents("php://input");
-	//$this->request->get("HTTP_RAW_POST_DATA");
+		$postStr = file_get_contents("php://input");
+		//$this->request->get("HTTP_RAW_POST_DATA");
 
-
-	//$dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper';
-        //$myfile = $dir.'/wechatDebug.txt';
-        //$file_pointer = @fopen($myfile,"a");
-        //@fwrite($file_pointer,$postStr );
-        //@fclose($file_pointer);
-
+		//$dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper';
+		//$myfile = $dir.'/wechatDebug.txt';
+		//$file_pointer = @fopen($myfile,"a");
+		//@fwrite($file_pointer,$postStr );
+		//@fclose($file_pointer);
 
         if (!empty($postStr)){
                 $options = Helper::options()->plugin('WeChatHelper');
@@ -119,31 +114,26 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                         $resultStr = $this->searchPost($postObj, $searchParam);
                     }else{
                     	$info = $keyword ;
-                        //$resultStr = $this->chatText($postObj, $info);
-			$resultStr = $this->searchPost($postObj, $searchParam);
+						$resultStr = $this->searchPost($postObj, $searchParam);
                     }
                 }else if($msgType == "event"){
                     if($postObj->Event == "subscribe"){
                         $contentStr = $options->welcome;
                         $resultStr = $this->baseText($postObj, $contentStr);
-			//$resultStr = $this->newPost($postObj);
+						//$resultStr = $this->newPost($postObj);
                     }
-		    if($postObj->Event == "CLICK"){
-			$eventkey = trim($postObj->EventKey);
-			if ($eventkey=="n" || $eventkey=="N") {
-			$resultStr = $this->newPost($postObj);
-			}
-			if ($eventkey=="l" || $eventkey=="L") {
-			$resultStr = $this->luckyPost($postObj);
-                        }
-
-                        if ($eventkey=="r" || $eventkey=="R") {
-			$resultStr = $this->randomPost($postObj);
-                        }
-
-
-                    }
-
+					if($postObj->Event == "CLICK"){
+						$eventkey = trim($postObj->EventKey);
+						if ($eventkey=="n" || $eventkey=="N") {
+							$resultStr = $this->newPost($postObj);
+						}
+						if ($eventkey=="l" || $eventkey=="L") {
+							$resultStr = $this->luckyPost($postObj);
+						}
+						if ($eventkey=="r" || $eventkey=="R") {
+							$resultStr = $this->randomPost($postObj);
+						}
+					}
                 }
                 if(empty($resultStr)){
                     $resultStr = $this->baseText($postObj);
@@ -166,11 +156,10 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     public function action(){
         //$this->widget('Widget_User')->pass('administrator');
         //$this->response->goBack();
-	$this->link();
-	if($this->request->is('menus')){  //菜单业务
+		//$this->link();
+		if($this->request->is('menus')){  //菜单业务
             Typecho_Widget::widget('WeChatHelper_Widget_Menus')->action();
         }
-
     }
 
     private function checkSignature($_token)
@@ -178,13 +167,13 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $signature = $this->request->get('signature');
         $timestamp = $this->request->get('timestamp');
         $nonce = $this->request->get('nonce');
-                
+
         $token = $_token;
         $tmpArr = array($token, $timestamp, $nonce);
         sort($tmpArr);
         $tmpStr = implode($tmpArr);
         $tmpStr = sha1($tmpStr);
-        
+
         if($tmpStr == $signature){
             return true;
         }else{
@@ -284,17 +273,16 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 					$preg = '/<img\ssrc=(\'|\")(.*?)\.(jpg|png)(\'|\")/is';//default src pic
 					preg_match_all( $preg, $val['text'], $matches );
 					if(isset($matches) && isset($matches[1][0])){
-                                 	        $tmpPicUrl = $matches[1][0];
-                                	}else{
+						$tmpPicUrl = $matches[1][0];
+					}else{
 						$preg = '/\!\[.*?\]\((http(s)?:\/\/.*?(jpg|png))/i';
 						preg_match_all( $preg, $val['text'], $matches );
 						if(isset($matches) && isset($matches[1][0])){
-                                          	      $tmpPicUrl = $matches[1][0];
-                                        	}else{
+							$tmpPicUrl = $matches[1][0];
+						}else{
 							$tmpPicUrl = $this->_imageDefault;
 						}
 					}
-					
 					//$tmpPicUrl = $this->_imageDefault;
 				}
 				$tmpPicUrl = $tmpPicUrl."?imageView2/1/w/300";
@@ -302,7 +290,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                 $num++;
             }
         }else{
-                $resultStr = "没有找到任何信息！";
+			$resultStr = "没有找到任何信息！";
         }
         $fromUsername = $postObj->FromUserName;
         $toUsername = $postObj->ToUserName;

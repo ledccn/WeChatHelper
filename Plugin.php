@@ -21,32 +21,29 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
     {
         $db = Typecho_Db::get();
         if ("Pdo_Mysql" === $db->getAdapterName() || "Mysql" === $db->getAdapterName()) {
-            /**
-             * 创建自定义菜单表
-             */
+            //创建自定义菜单表
             $db->query("CREATE TABLE IF NOT EXISTS " . $db->getPrefix() . 'wch_menus' . " (
-                      `mid` int(11) NOT NULL AUTO_INCREMENT,
-                      `level` varchar(10) DEFAULT 'button',
-                      `name` varchar(200) DEFAULT '',
-                      `type` varchar(10) DEFAULT 'view',
-                      `value` varchar(200) DEFAULT '',
-                      `sort` int(3) DEFAULT '0',
-                      `order` int(3) DEFAULT '1',
-                      `parent` int(11) DEFAULT '0',
-                      `created` int(10) DEFAULT '0',
-                      PRIMARY KEY (`mid`)
-                    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+				  `mid` int(11) NOT NULL AUTO_INCREMENT,
+				  `level` varchar(10) DEFAULT 'button',
+				  `name` varchar(200) DEFAULT '',
+				  `type` varchar(10) DEFAULT 'view',
+				  `value` varchar(200) DEFAULT '',
+				  `sort` int(3) DEFAULT '0',
+				  `order` int(3) DEFAULT '1',
+				  `parent` int(11) DEFAULT '0',
+				  `created` int(10) DEFAULT '0',
+				  PRIMARY KEY (`mid`)
+				) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
             $db->query("INSERT INTO `" . $db->getPrefix() . 'wch_menus' . "` (`mid`, `level`, `name`, `type`, `value`, `sort`, `order`, `parent`, `created`) VALUES
-(1, 'button', '首页', 'view', 'https://www.iyuu.cn/', 10, 1, 0, 1503804104),
-(3, 'button', '搜索', 'view', 'https://www.iyuu.cn/', 20, 2, 0, 1503804141),
-(4, 'button', '其他', 'click', NULL, 50, 5, 0, 1503804153),
-(6, 'sub_button', '最新文章', 'click', 'n', 51, 1, 4, 1503804247),
-(7, 'sub_button', '随机文章', 'click', 'r', 52, 2, 4, 1503807202),
-(8, 'sub_button', '手气不错', 'click', 'l', 54, 4, 4, 1503824995);");
-
-	    $db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_access_token","user"=>"0","value"=>"0")));
-	    $db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_expires_in","user"=>"0","value"=>"0")));
-
+				(1, 'button', '首页', 'view', 'https://www.iyuu.cn/', 10, 1, 0, 1503804104),
+				(3, 'button', '搜索', 'view', 'https://www.iyuu.cn/', 20, 2, 0, 1503804141),
+				(4, 'button', '其他', 'click', NULL, 50, 5, 0, 1503804153),
+				(6, 'sub_button', '最新文章', 'click', 'n', 51, 1, 4, 1503804247),
+				(7, 'sub_button', '随机文章', 'click', 'r', 52, 2, 4, 1503807202),
+				(8, 'sub_button', '手气不错', 'click', 'l', 54, 4, 4, 1503824995);");
+			//插入WCH_access_token、WCH_expires_in
+			$db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_access_token","user"=>"0","value"=>"0")));
+			$db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_expires_in","user"=>"0","value"=>"0")));
         } else {
             throw new Typecho_Plugin_Exception(_t('对不起, 本插件仅支持MySQL数据库。'));
         }
@@ -54,7 +51,6 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
 		Helper::addRoute('wechat', '/wechat', 'WeChatHelper_Action', 'link');
 		Helper::addAction('WeChat', 'WeChatHelper_Action');
         Helper::addPanel(1, 'WeChatHelper/Page/Menus.php', '公众号菜单', '公众号菜单', 'administrator');
-
         return ('微信助手已经成功激活，请进入设置Token!');
     }
 
@@ -75,9 +71,9 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
             $db->query($db->sql()->delete('table.options')->where('name like ?', "WCH_%"));
         }
 
-        Helper::removePanel(1, 'WeChatHelper/Page/Menus.php');
-        Helper::removeRoute('wechat');
+		Helper::removeRoute('wechat');
         Helper::removeAction('WeChat');
+        Helper::removePanel(1, 'WeChatHelper/Page/Menus.php');
     }
 
     /**
@@ -128,7 +124,5 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
      * @param Typecho_Widget_Helper_Form $form
      * @return void
      */
-    public static function personalConfig(Typecho_Widget_Helper_Form $form)
-    {
-    }
+    public static function personalConfig(Typecho_Widget_Helper_Form $form) {}
 }
