@@ -88,18 +88,36 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
 
         $level = new Typecho_Widget_Helper_Form_Element_Radio('level', 
             array('button' => _t('一级菜单'), 'sub_button' => _t('二级菜单 '.$parent)),
-            'button', _t('消息类型'), NULL);
+            'button', _t('菜单级别'), _t('菜单最多包括3个一级菜单，每个一级菜单最多包含5个二级菜单。'));
         $form->addInput($level->multiMode());
 
         $name = new Typecho_Widget_Helper_Form_Element_Text('name', NULL, NULL,
-        _t('标题'), _t('菜单标题，不超过16个字节。'));
+        _t('菜单名称'), _t('一级菜单最多4个汉字，二级最多7个汉字。'));
         $form->addInput($name);
 
-        $type = new Typecho_Widget_Helper_Form_Element_Radio('type', array('click' => _t('Click类型'), 'view' => _t('View类型')), 'click', _t('消息类型'), NULL);
+        $type = new Typecho_Widget_Helper_Form_Element_Radio('type', array(
+            'click' => _t('发消息'), 
+            'view' => _t('跳转网页'), 
+            'scancode_push' => _t('扫码'), 
+            'scancode_waitmsg' => _t('扫码等待消息'), 
+            'pic_sysphoto' => _t('拍照发图'), 
+            'pic_photo_or_album' => _t('拍照相册'), 
+            'pic_weixin' => _t('微信相册发图'), 
+            'location_select' => _t('地理位置'), 
+            'view_miniprogram' => _t('关联小程序')), 
+            'click', _t('菜单类型'), _t('发消息click：触发关键字，发消息;<br />
+            跳转网页view：网页链接，点击菜单跳转链接;<br />
+            扫码scancode_push：触发关键字，手机扫码二维码;<br />
+            扫码等待消息scancode_waitmsg：触发关键字，手机扫码二维码;<br />
+            拍照发图pic_sysphoto：触发关键字，拍照发图;<br />
+            拍照相册pic_photo_or_album：触发关键字，拍照相册发图;<br />
+            相册发图pic_weixin：触发关键字，选择图片发图;<br />
+            地理位置location_select：触发关键字，弹出地理位置选择;<br />
+            关联小程序view_miniprogram：点击菜单跳转关联的小程序;<br />'));
         $form->addInput($type);
 
         $value = new Typecho_Widget_Helper_Form_Element_Text('value', NULL, NULL,
-        _t('Key & URL值'), _t('Click类型：菜单KEY值，用于消息接口推送，不超过128字节；<br />View类型：网页链接，用户点击菜单可打开链接，不超过256字节。'));
+        _t('EventKey & URL值'),NULL);
         $form->addInput($value);
 
         $order = new Typecho_Widget_Helper_Form_Element_Select('order', 
@@ -142,7 +160,7 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
 
         /** 给表单增加规则 */
         if ('insert' == $action || 'update' == $action) {
-            $level->addRule(array($this, 'checkLevelNum'), _t('一级标题不能超过3个或同一一级标题下的二级标题不能超过5个。'), 'mid');
+            $level->addRule(array($this, 'checkLevelNum'), _t('菜单最多包括3个一级菜单，每个一级菜单最多包含5个二级菜单。'), 'mid');
             $name->addRule('required', _t('标题不能为空'));
             $name->addRule(array($this, 'checkMaxLength'), _t('菜单标题最多包含16个字符'), 'type');
             $value->addRule(array($this, 'checkKeyOrUrl'), _t('URL格式不正确'), 'type');
