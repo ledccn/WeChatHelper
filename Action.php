@@ -83,13 +83,12 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     public function postAction(){
         $options = $this->_WeChatHelper;
         $postStr = file_get_contents("php://input");
-
 		//$dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper';
 		//$myfile = $dir.'/wechatDebug.txt';
 		//$file_pointer = @fopen($myfile,"a");
 		//@fwrite($file_pointer,$postStr );
-		//@fclose($file_pointer);
-
+        //@fclose($file_pointer);
+        
         if ($this->checkSignature($this->_WeChatHelper->token) && !empty($postStr)){
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
             $fromUsername = $postObj->FromUserName;
@@ -165,6 +164,15 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                                 $contentStr = "s 关键词 搜索日志\n ";
                                 $resultStr = $this->baseText($postObj, $contentStr);
                                 break;
+                            case 'l':   //手气不错
+                                $resultStr = $this->luckyPost($postObj);
+                                break;
+                            case 'n':   //最新文章
+                                $resultStr = $this->newPost($postObj);
+                                break;
+                            case 'r':   //随机文章
+                                $resultStr = $this->randomPost($postObj);
+                                break;
                             case 's':   //搜索
                                 $searchParam = substr($keyword, 1);
                                 $resultStr = $this->searchPost($postObj, $searchParam);
@@ -215,7 +223,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         @fclose($file_pointer);
 */
     }
-
+    //动作入口
     public function action(){
         //$this->widget('Widget_User')->pass('administrator');
         //$this->response->goBack();
@@ -224,7 +232,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             Typecho_Widget::widget('WeChatHelper_Widget_Menus')->action();
         }
     }
-
+    //校验签名
     private function checkSignature($_token)
     {
         $signature = $this->request->get('signature');
@@ -233,7 +241,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 
         $tmpArr = array($_token, $timestamp, $nonce);
         sort($tmpArr,SORT_STRING);
-        $tmpStr = sha1(join($tmpArr));
+        $tmpStr = sha1(join('',$tmpArr));
 
         if($tmpStr == $signature){
             return true;
@@ -241,7 +249,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             return false;
         }
     }
-    /** 基础文本信息 **/
+    //文本信息
     private function baseText($postObj, $contentStr=''){
         if(empty($contentStr)){
             $contentStr =  '<<<你在说什么? 可以发送\'h\'来查看帮助！';
@@ -253,7 +261,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         return $resultStr;
     }
 
-    /** 最新日志 **/
+    //最新
     private function newPost($postObj){
         $db = Typecho_Db::get();
         $sql = $db->select()->from('table.contents')
@@ -267,7 +275,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         return $resultStr;
     }
 
-    /** 随机日志 **/
+    //随机
     private function randomPost($postObj){
         $db = Typecho_Db::get();
         $sql = $db->select()->from('table.contents')
@@ -281,7 +289,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
     }
-    /** 手气不错 **/
+    //手气不错
     private function luckyPost($postObj){
         $db = Typecho_Db::get();
         $sql = $db->select()->from('table.contents')
@@ -295,8 +303,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
     }
-
-    /** 搜索日志 **/
+    //搜索
     private function searchPost($postObj, $searchParam){
         $searchParam = '%' . str_replace(' ', '%', $searchParam) . '%';
 
@@ -313,7 +320,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
     }
-
+    //组装图文消息
     private function sqlData($postObj, $data){
         $_subMaxNum = $this->_WeChatHelper->subMaxNum;
         $resultStr = "";
@@ -343,9 +350,8 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 							$tmpPicUrl = $this->_imageDefault;
 						}
 					}
-					//$tmpPicUrl = $this->_imageDefault;
 				}
-				$tmpPicUrl = $tmpPicUrl."?imageView2/1/w/300";
+				//$tmpPicUrl = $tmpPicUrl."?imageView2/1/w/300";
                 $resultStr .= sprintf($this->_itemTpl, $val['title'], $content, $tmpPicUrl, $val['permalink']);
                 $num++;
             }
