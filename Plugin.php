@@ -1,12 +1,12 @@
 <?php
 /**
- * Typecho 微信助手
- * 对冰剑(https://github.com/binjoo/WeChatHelper)进行精简的版本。
+ * Typecho微信助手
+ * 对<a href="https://github.com/binjoo/WeChatHelper" target="_blank">冰剑</a>进行精简的版本。
  *
  * @package WeChatHelper
- * @author Holmesian
- * @version 2.2.2
- * @link https://holmesian.org
+ * @author 大卫科技Blog
+ * @version 2.3.0
+ * @link https://www.iyuu.cn
  */
 class WeChatHelper_Plugin implements Typecho_Plugin_Interface
 {
