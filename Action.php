@@ -72,7 +72,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             echo $echoStr;
             exit;
         }else {
-            die('请通过微信客户端访问');
+            die('Token验证不通过');
         }
     }
 
@@ -83,7 +83,6 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     public function postAction(){
         $options = $this->_WeChatHelper;
         $postStr = file_get_contents("php://input");
-		//$this->request->get("HTTP_RAW_POST_DATA");
 
 		//$dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper';
 		//$myfile = $dir.'/wechatDebug.txt';
@@ -91,7 +90,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 		//@fwrite($file_pointer,$postStr );
 		//@fclose($file_pointer);
 
-        if (!empty($postStr)){
+        if ($this->checkSignature($this->_WeChatHelper->token) && !empty($postStr)){
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
             $fromUsername = $postObj->FromUserName;
             $toUsername = $postObj->ToUserName;
@@ -169,7 +168,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                             case 's':   //搜索
                                 $searchParam = substr($keyword, 1);
                                 $resultStr = $this->searchPost($postObj, $searchParam);
-                                break;                                                        
+                                break;
                             default:    //未匹配
                                 $resultStr = $this->baseText($postObj);
                                 break;
@@ -205,8 +204,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             //唯一响应，切勿删除
             echo $resultStr;
         }else {
-            echo "";
-            exit;
+            die('Token验证不通过');
         }
 /*
         $dir = __TYPECHO_ROOT_DIR__ . DIRECTORY_SEPARATOR;
@@ -233,11 +231,9 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $timestamp = $this->request->get('timestamp');
         $nonce = $this->request->get('nonce');
 
-        $token = $_token;
-        $tmpArr = array($token, $timestamp, $nonce);
-        sort($tmpArr);
-        $tmpStr = implode($tmpArr);
-        $tmpStr = sha1($tmpStr);
+        $tmpArr = array($_token, $timestamp, $nonce);
+        sort($tmpArr,SORT_STRING);
+        $tmpStr = sha1(join($tmpArr));
 
         if($tmpStr == $signature){
             return true;
