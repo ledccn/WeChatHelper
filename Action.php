@@ -8,6 +8,7 @@
 class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     private $db;
+    private $_WeChatHelper;
     private $_textTpl;
     private $_imageTpl;
     private $_itemTpl;
@@ -18,9 +19,9 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         parent::__construct($request, $response, $params);
 
         $this->db = Typecho_Db::get();
-        $this->_imageNum = Helper::options()->plugin('WeChatHelper')->imageNum;
-        $this->_tulingApi = Helper::options()->plugin('WeChatHelper')->tulingApi;
-        $this->_imageDefault = Helper::options()->plugin('WeChatHelper')->imageDefault;
+        $this->_WeChatHelper = Helper::options()->plugin('WeChatHelper');
+        $this->_imageNum = $this->_WeChatHelper->imageNum;
+        $this->_imageDefault = $this->_WeChatHelper->imageDefault;
         $this->_textTpl = "<xml>
                             <ToUserName><![CDATA[%s]]></ToUserName>
                             <FromUserName><![CDATA[%s]]></FromUserName>
@@ -65,12 +66,13 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
      *
      */
     public function getAction(){
-        $_token = Helper::options()->plugin('WeChatHelper')->token;
         $echoStr = $this->request->get('echostr');
 
-        if($this->checkSignature($_token)){
+        if($this->checkSignature($this->_WeChatHelper->token)){
             echo $echoStr;
             exit;
+        }else {
+            die('请通过微信客户端访问');
         }
     }
 
@@ -79,8 +81,8 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
      *
      */
     public function postAction(){
-        $options = Helper::options()->plugin('WeChatHelper');
-		$postStr = file_get_contents("php://input");
+        $options = $this->_WeChatHelper;
+        $postStr = file_get_contents("php://input");
 		//$this->request->get("HTTP_RAW_POST_DATA");
 
 		//$dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper';
@@ -89,7 +91,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 		//@fwrite($file_pointer,$postStr );
 		//@fclose($file_pointer);
 
-        if ( $this->checkSignature($options->token) && !empty($postStr) ){
+        if (!empty($postStr)){
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
             $fromUsername = $postObj->FromUserName;
             $toUsername = $postObj->ToUserName;
@@ -110,14 +112,19 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                         break;
                     case 'click'				:   //自定义菜单事件（点击菜单拉取消息时的事件推送）
                         $eventkey = strtolower($postObj->EventKey);	    //事件KEY值 转小写
-                        if ($eventkey=="n" || $eventkey=="N") {
-                            $resultStr = $this->newPost($postObj);
-                        }
-                        if ($eventkey=="l" || $eventkey=="L") {
-                            $resultStr = $this->luckyPost($postObj);
-                        }
-                        if ($eventkey=="r" || $eventkey=="R") {
-                            $resultStr = $this->randomPost($postObj);
+                        switch ($eventkey) {
+                            case 'l':   //手气不错
+                                $resultStr = $this->luckyPost($postObj);
+                                break;
+                            case 'n':   //最新文章
+                                $resultStr = $this->newPost($postObj);
+                                break;
+                            case 'r':   //随机文章
+                                $resultStr = $this->randomPost($postObj);
+                                break;
+                            default:
+                                # code...
+                                break;
                         }
                         break;
                     case 'view'					:   //自定义菜单事件（点击菜单跳转链接时的事件推送）
@@ -154,20 +161,18 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                     case 'text'       :   //文本信息
                         $keyword = trim($postObj->Content);
                         $cmd = strtolower(substr($keyword, 0, 1));  //转小写
-                        if($cmd=="h"){
-                            $contentStr = "\"n\" 最新日志\n\"r\" 随机日志\n\"l\" 手气不错\n\"s 关键词\" 搜索日志\n\" ";
-                            $resultStr = $this->baseText($postObj, $contentStr);
-                        }elseif ($cmd=="r") {
-                            $resultStr = $this->randomPost($postObj);
-                        }elseif ($cmd=="n") {
-                            $resultStr = $this->newPost($postObj);
-                        }elseif ($cmd=="l") {
-                            $resultStr = $this->luckyPost($postObj);
-                        }elseif ($cmd=="s") {
-                            $searchParam = substr($keyword, 1);
-                            $resultStr = $this->searchPost($postObj, $searchParam);
-                        }else{
-                            $resultStr = $this->baseText($postObj);
+                        switch ($cmd) {
+                            case 'h':
+                                $contentStr = "s 关键词 搜索日志\n ";
+                                $resultStr = $this->baseText($postObj, $contentStr);
+                                break;
+                            case 's':   //搜索
+                                $searchParam = substr($keyword, 1);
+                                $resultStr = $this->searchPost($postObj, $searchParam);
+                                break;                                                        
+                            default:    //未匹配
+                                $resultStr = $this->baseText($postObj);
+                                break;
                         }
                         break;
                     case 'image'      :   //图片消息
@@ -193,7 +198,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                         break;
                 }
                 //普通消息 响应测试
-                if (empty($resultStr) && ($msgType != 'text')){
+                if (empty($resultStr)){
                     $resultStr = $this->baseText($postObj, $keyword);
                 }
             }
@@ -243,7 +248,6 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     /** 基础文本信息 **/
     private function baseText($postObj, $contentStr=''){
         if(empty($contentStr)){
-            $options = Helper::options()->plugin('WeChatHelper');
             $contentStr =  '<<<你在说什么? 可以发送\'h\'来查看帮助！';
         }
         $fromUsername = $postObj->FromUserName;
@@ -315,7 +319,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     }
 
     private function sqlData($postObj, $data){
-        $_subMaxNum = Helper::options()->plugin('WeChatHelper')->subMaxNum;
+        $_subMaxNum = $this->_WeChatHelper->subMaxNum;
         $resultStr = "";
         $num = 0;
         $tmpPicUrl = "";
