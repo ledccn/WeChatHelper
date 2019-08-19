@@ -7,7 +7,7 @@ $currentUrl = Helper::url("WeChatHelper/Page/Menus.php");
 <div class="main">
     <div class="body container">
         <div class="typecho-page-title">
-            <h2><?php _e($menu->title);?><a href="<?php _e($currentUrl) ?>">新增</a></h2>
+            <h2><?php _e($menu->title);?></h2>
         </div>
         <div class="row typecho-page-main">
             <div class="col-mb-12 col-tb-8" role="main">
@@ -64,7 +64,7 @@ $currentUrl = Helper::url("WeChatHelper/Page/Menus.php");
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="8" style="text-align:center"><?php _e('没有任何用户'); ?></td>
+                                    <td colspan="8" style="text-align:center"><?php _e('没有任何自定义菜单，赶紧新建吧'); ?></td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
