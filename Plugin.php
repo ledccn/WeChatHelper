@@ -24,9 +24,9 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
             //创建自定义菜单表
             $db->query("CREATE TABLE IF NOT EXISTS " . $db->getPrefix() . 'wch_menus' . " (
 				  `mid` int(11) NOT NULL AUTO_INCREMENT,
-				  `level` varchar(10) DEFAULT 'button',
-				  `name` varchar(200) DEFAULT '',
-				  `type` varchar(10) DEFAULT 'view',
+				  `level` varchar(15) DEFAULT 'button',
+				  `name` varchar(32) DEFAULT '',
+				  `type` varchar(32) DEFAULT 'view',
 				  `value` varchar(200) DEFAULT '',
 				  `sort` int(3) DEFAULT '0',
 				  `order` int(3) DEFAULT '1',
