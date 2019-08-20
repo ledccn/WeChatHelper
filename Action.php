@@ -8,6 +8,7 @@
 class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     private $db;
+    private $_debug = true;     //调试开关false true
     private $_WeChatHelper;
     private $_textTpl;
     private $_imageTpl;
@@ -80,11 +81,14 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $options = $this->_WeChatHelper;
         $postStr = file_get_contents("php://input");
         //调试
-		//$dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper';
-		//$myfile = $dir.'/wechatDebug.txt';
-		//$file_pointer = @fopen($myfile,"a");
-		//@fwrite($file_pointer,$postStr );
-        //@fclose($file_pointer);
+        if ($this->_debug) {
+            $dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper/';
+            $myfile = $dir.'/wechatPostDebug.txt';
+            $file_pointer = @fopen($myfile,"a");
+            @fwrite($file_pointer,$postStr);
+            @fwrite($file_pointer,"\r\n\r\n");
+            @fclose($file_pointer);
+        }
 
         if ($this->checkSignature($options->token) && !empty($postStr)){
             $resultStr = '';    //响应初始化，勿删
@@ -238,14 +242,15 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         }else {
             die('Token验证不通过');
         }
-/*
-        $dir = __TYPECHO_ROOT_DIR__ . DIRECTORY_SEPARATOR;
-        $myfile = $dir.'nihao.txt';
-        echo $myfile;
-        $file_pointer = @fopen($myfile,"a");
-        @fwrite($file_pointer, $resultStr);
-        @fclose($file_pointer);
-*/
+        //调试
+        if ($this->_debug) {
+            $dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper/';
+            $myfile = $dir.'wechatResultDebug.txt';
+            $file_pointer = @fopen($myfile,"a");
+            @fwrite($file_pointer, $resultStr);
+            @fwrite($file_pointer,"\r\n\r\n");
+            @fclose($file_pointer);
+        }
     }
     //动作入口
     public function action(){
@@ -281,29 +286,29 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $resultStr = sprintf($this->_textTpl, $fromUsername, $toUsername, $time, $contentStr);
         return $resultStr;
     }
-
     //最新
     private function newPost($postObj){
+        $ArticleCount = $postObj->MsgType == 'event' ? $this->_imageNum : 1;
         $db = Typecho_Db::get();
         $sql = $db->select()->from('table.contents')
             ->where('table.contents.status = ?', 'publish')
             ->where('table.contents.type = ?', 'post')
             ->order('table.contents.created', Typecho_Db::SORT_DESC)
-            ->limit($this->_imageNum);
+            ->limit($ArticleCount);
         $result = $db->fetchAll($sql);
 
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
     }
-
     //随机
     private function randomPost($postObj){
+        $ArticleCount = $postObj->MsgType == 'event' ? $this->_imageNum : 1;
         $db = Typecho_Db::get();
         $sql = $db->select()->from('table.contents')
             ->where('table.contents.status = ?','publish')
             ->where('table.contents.type = ?', 'post')
             ->where('table.contents.created <= unix_timestamp(now())', 'post') //添加这一句避免未达到时间的文章提前曝光
-            ->limit($this->_imageNum)
+            ->limit($ArticleCount)
             ->order('RAND()');
         $result = $db->fetchAll($sql);
 
@@ -326,6 +331,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     }
     //搜索
     private function searchPost($postObj, $searchParam){
+        $ArticleCount = $postObj->MsgType == 'event' ? $this->_imageNum : 1;
         $searchParam = '%' . str_replace(' ', '%', $searchParam) . '%';
 
         $db = Typecho_Db::get();
@@ -335,7 +341,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             ->where('table.contents.status = ?', 'publish')
             ->where('table.contents.type = ?', 'post')
             ->order('table.contents.created', Typecho_Db::SORT_DESC)
-            ->limit($this->_imageNum);
+            ->limit($ArticleCount);
         $result = $db->fetchAll($sql);
 
         $resultStr = $this->sqlData($postObj, $result);
@@ -345,9 +351,8 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     private function sqlData($postObj, $data){
         $_subMaxNum = $this->_WeChatHelper->subMaxNum;
         $resultStr = "";
-        $num = 0;
         $tmpPicUrl = "";
-
+        $num = 0;
         if($data != null){
         	foreach($data as $val){
                 $val = Typecho_Widget::widget('Widget_Abstract_Contents')->filter($val);
