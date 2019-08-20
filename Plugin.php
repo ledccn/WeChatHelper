@@ -47,8 +47,9 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
         } else {
             throw new Typecho_Plugin_Exception(_t('对不起, 本插件仅支持MySQL数据库。'));
         }
-
+        
 		Helper::addRoute('wechat', '/wechat', 'WeChatHelper_Action', 'link');
+		Helper::addRoute('send', '/send', 'WeChatHelper_Widget_Send', 'send');
 		Helper::addAction('WeChat', 'WeChatHelper_Action');
         Helper::addPanel(1, 'WeChatHelper/Page/Menus.php', '公众号菜单', '公众号菜单', 'administrator');
         return ('微信助手已经成功激活，请进入设置Token!');
@@ -71,7 +72,8 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
             $db->query($db->sql()->delete('table.options')->where('name like ?', "WCH_%"));
         }
 
-		Helper::removeRoute('wechat');
+        Helper::removeRoute('wechat');
+        Helper::removeRoute('send');
         Helper::removeAction('WeChat');
         Helper::removePanel(1, 'WeChatHelper/Page/Menus.php');
     }
