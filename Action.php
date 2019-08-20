@@ -91,7 +91,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         }
 
         if ($this->checkSignature($options->token) && !empty($postStr)){
-            $resultStr = '';    //响应初始化，勿删
+            $resultStr = '';    //响应初始化，勿删 success
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
             #$postArr = (array)$postObj;     //转数组
             $fromUsername = $postObj->FromUserName;
@@ -232,13 +232,13 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                         $resultStr = $this->baseText($postObj, $msgType.'未知消息类型！');
                         break;
                 }
-                //普通消息 响应测试
+                //普通消息 功能响应测试
                 if (empty($resultStr)){
                     $resultStr = $this->baseText($postObj, $keyword);
                 }
             }
-            //唯一响应，切勿删除
-            echo $resultStr;
+            //5秒内唯一回复，切勿删除
+            echo empty($resultStr) ? 'success' : $resultStr;
         }else {
             die('Token验证不通过');
         }
