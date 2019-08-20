@@ -23,30 +23,29 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $this->_imageNum = $this->_WeChatHelper->imageNum;
         $this->_imageDefault = $this->_WeChatHelper->imageDefault;
         $this->_textTpl = "<xml>
-                            <ToUserName><![CDATA[%s]]></ToUserName>
-                            <FromUserName><![CDATA[%s]]></FromUserName>
-                            <CreateTime>%s</CreateTime>
-                            <MsgType><![CDATA[text]]></MsgType>
-                            <Content><![CDATA[%s]]></Content>
-                            <FuncFlag>0</FuncFlag>
-                            </xml>";
+            <ToUserName><![CDATA[%s]]></ToUserName>
+            <FromUserName><![CDATA[%s]]></FromUserName>
+            <CreateTime>%s</CreateTime>
+            <MsgType><![CDATA[text]]></MsgType>
+            <Content><![CDATA[%s]]></Content>
+            <FuncFlag>0</FuncFlag>
+            </xml>";
         $this->_imageTpl = "<xml>
-                             <ToUserName><![CDATA[%s]]></ToUserName>
-                             <FromUserName><![CDATA[%s]]></FromUserName>
-                             <CreateTime>%s</CreateTime>
-                             <MsgType><![CDATA[news]]></MsgType>
-                             <ArticleCount>%s</ArticleCount>
-                             <Articles>%s</Articles>
-                             <FuncFlag>1</FuncFlag>
-                             </xml>";
+            <ToUserName><![CDATA[%s]]></ToUserName>
+            <FromUserName><![CDATA[%s]]></FromUserName>
+            <CreateTime>%s</CreateTime>
+            <MsgType><![CDATA[news]]></MsgType>
+            <ArticleCount>%s</ArticleCount>
+            <Articles>%s</Articles>
+            <FuncFlag>1</FuncFlag>
+            </xml>";
         $this->_itemTpl = "<item>
-                             <Title><![CDATA[%s]]></Title>
-                             <Description><![CDATA[%s]]></Description>
-                             <PicUrl><![CDATA[%s]]></PicUrl>
-                             <Url><![CDATA[%s]]></Url>
-                             </item>";
+            <Title><![CDATA[%s]]></Title>
+            <Description><![CDATA[%s]]></Description>
+            <PicUrl><![CDATA[%s]]></PicUrl>
+            <Url><![CDATA[%s]]></Url>
+            </item>";
     }
-
     /**
      * 链接重定向
      *
@@ -60,14 +59,12 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             $this->postAction();
         }
     }
-
     /**
-     * 校验
+     * 校验token
      *
      */
     public function getAction(){
         $echoStr = $this->request->get('echostr');
-
         if($this->checkSignature($this->_WeChatHelper->token)){
             echo $echoStr;
             exit;
@@ -75,7 +72,6 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             die('Token验证不通过');
         }
     }
-
     /**
      * 数据
      *
@@ -88,8 +84,8 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 		//$file_pointer = @fopen($myfile,"a");
 		//@fwrite($file_pointer,$postStr );
         //@fclose($file_pointer);
-        
-        if ($this->checkSignature($this->_WeChatHelper->token) && !empty($postStr)){
+
+        if ($this->checkSignature($options->token) && !empty($postStr)){
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
             $fromUsername = $postObj->FromUserName;
             $toUsername = $postObj->ToUserName;
@@ -151,7 +147,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                     case 'location_select'		:   //自定义菜单事件（弹出地理位置选择器的事件推送）
                         break;
                     default						:   //未知事件类型
-                        $resultStr = $this->baseText($postObj, $Event.'未知事件类型，请重新输入！');
+                        $resultStr = $this->baseText($postObj, $Event.'未知事件类型！');
                         break;
                 }
             }else{                         //普通消息
@@ -201,7 +197,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                         $keyword = '您发送的为链接消息，标题为: '.$postObj->Title.'内容为: '.$postObj->Description.'链接地址为: '.$postObj->Url;
                         break;
                     default           :   //未知消息类型
-                        $keyword = $msgType.'未知消息类型！';
+                        $resultStr = $this->baseText($postObj, $msgType.'未知消息类型！');
                         break;
                 }
                 //普通消息 响应测试
@@ -227,7 +223,6 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     public function action(){
         //$this->widget('Widget_User')->pass('administrator');
         //$this->response->goBack();
-		//$this->link();
 		if($this->request->is('menus')){  //菜单业务
             Typecho_Widget::widget('WeChatHelper_Widget_Menus')->action();
         }
@@ -238,11 +233,9 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $signature = $this->request->get('signature');
         $timestamp = $this->request->get('timestamp');
         $nonce = $this->request->get('nonce');
-
         $tmpArr = array($_token, $timestamp, $nonce);
         sort($tmpArr,SORT_STRING);
         $tmpStr = sha1(join('',$tmpArr));
-
         if($tmpStr == $signature){
             return true;
         }else{
@@ -252,7 +245,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     //文本信息
     private function baseText($postObj, $contentStr=''){
         if(empty($contentStr)){
-            $contentStr =  '<<<你在说什么? 可以发送\'h\'来查看帮助！';
+            $contentStr =  '你在说什么? 可以发送\'h\'来查看帮助！';
         }
         $fromUsername = $postObj->FromUserName;
         $toUsername = $postObj->ToUserName;
@@ -331,13 +324,12 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         	foreach($data as $val){
                 $val = Typecho_Widget::widget('Widget_Abstract_Contents')->filter($val);
                 $content = Typecho_Common::subStr(strip_tags($val['text']), 0, $_subMaxNum, '...');
-                //$preg = "/<img\ssrc=(\'|\")(.*?)\.(jpg|png)(\'|\")/is";
-                $preg = "/\[.*?\]:\s*(http(s)?:\/\/.*?(jpg|png))/i"; //For markdown first pic.
+                $preg = "/\[.*?\]:\s*(http(s)?:\/\/.*?(jpg|png))/i";            //For markdown first pic.
 				preg_match_all( $preg, $val['text'], $matches );
 				if(isset($matches) && isset($matches[1][0])){
 				 	$tmpPicUrl = $matches[1][0];
 				}else{
-					$preg = '/<img\ssrc=(\'|\")(.*?)\.(jpg|png)(\'|\")/is';//default src pic
+					$preg = '/<img\ssrc=(\'|\")(.*?)\.(jpg|png)(\'|\")/is';     //default src pic
 					preg_match_all( $preg, $val['text'], $matches );
 					if(isset($matches) && isset($matches[1][0])){
 						$tmpPicUrl = $matches[1][0];
@@ -350,8 +342,8 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 							$tmpPicUrl = $this->_imageDefault;
 						}
 					}
-				}
-				//$tmpPicUrl = $tmpPicUrl."?imageView2/1/w/300";
+                }                
+				//$tmpPicUrl = $tmpPicUrl."?imageView2/1/w/300";        //图片API
                 $resultStr .= sprintf($this->_itemTpl, $val['title'], $content, $tmpPicUrl, $val['permalink']);
                 $num++;
             }
@@ -368,6 +360,4 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         }
         return $resultStr;
     }
-
 }
-?>
