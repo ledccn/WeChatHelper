@@ -288,12 +288,12 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         $menu['created'] = time();
 
         /** 插入数据 */
-        $menu['mid'] = $this->db->query($this->insert($menu));
+        $menu['mid'] = $this->insert($menu);
         $this->push($menu);
 
         $this->widget('Widget_Notice')->highlight('menus-mid-'.$menu['mid']);
         $this->widget('Widget_Notice')->set(_t('自定义菜单添加成功'), 'success');
-        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
     public function updateMenu() {
@@ -313,7 +313,7 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
 
         $this->widget('Widget_Notice')->highlight('menus-mid-'.$menu['mid']);
         $this->widget('Widget_Notice')->set(_t('自定义菜单修改成功'), 'success');
-        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
     public function deleteMenu() {
@@ -333,21 +333,21 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         $deleteCount > 0 ? 'success' : 'notice');
 
         /** 转向原页 */
-        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
     public function createMenu(){
         $accessToken = Utils::getAccessToken();
         if(!$accessToken){
             $this->widget('Widget_Notice')->set('获取Access Token异常！', 'error');
-            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
         }
         $create['button'] = array();
         $select = $this->select()->where('level = ?', 'button')->order('table.wch_menus.order', Typecho_Db::SORT_ASC);
         $buttons = $this->db->fetchAll($select);
         if (count($buttons) > 3 || !count($buttons)) {
             $this->widget('Widget_Notice')->set(_t('错误：一级菜单没有找到或超过三个.'), 'error');
-            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
         }
         foreach ($buttons as $row) {
             $button = array();
@@ -381,7 +381,7 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
             $response = $client->setQuery($params)->setData(urldecode($json))->send(Utils::MENU_CREATE_URL);
         } catch (Exception $e) {
             $this->widget('Widget_Notice')->set(_t('对不起，创建自定义菜单失败，请重试！'), 'error');
-            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
         }
 
         $result = json_decode($response);
@@ -390,14 +390,14 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         }else{
             $this->widget('Widget_Notice')->set(_t('恭喜您，创建自定义菜单成功！'), 'success');
         }
-        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
     public function removeMenu(){
         $accessToken = Utils::getAccessToken();
         if(!$accessToken){
             $this->widget('Widget_Notice')->set('获取Access Token异常！', 'error');
-            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
         }
 
         try {
@@ -406,7 +406,7 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
             $response = $client->setQuery($params)->send(Utils::MENU_REMOVE_URL);
         } catch (Exception $e) {
             $this->widget('Widget_Notice')->set(_t('对不起，删除自定义菜单失败，请重试！'), 'error');
-            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+            $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
         }
 
         $result = json_decode($response);
@@ -415,7 +415,7 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         }else{
             $this->widget('Widget_Notice')->set(_t('恭喜您，删除自定义菜单成功！'), 'success');
         }
-        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php', $this->options->adminUrl));
+        $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
     public function action() {
