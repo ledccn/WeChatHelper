@@ -79,6 +79,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     public function postAction(){
         $options = $this->_WeChatHelper;
         $postStr = file_get_contents("php://input");
+        //调试
 		//$dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper';
 		//$myfile = $dir.'/wechatDebug.txt';
 		//$file_pointer = @fopen($myfile,"a");
@@ -86,7 +87,9 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         //@fclose($file_pointer);
 
         if ($this->checkSignature($options->token) && !empty($postStr)){
+            $resultStr = '';    //响应初始化，勿删
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
+            #$postArr = (array)$postObj;     //转数组
             $fromUsername = $postObj->FromUserName;
             $toUsername = $postObj->ToUserName;
             $time = time();
@@ -96,11 +99,32 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                 $Event = strtolower($postObj->Event);	//事件类型（转为小写）
                 switch($Event){
                     case 'subscribe'			:   //订阅事件（扫描带参数二维码事件(用户未关注)）
-                        $resultStr = $this->baseText($postObj, $options->welcome);
+                        if(isset($postObj->EventKey) || isset($postObj->Ticket)){
+                            // 扫描带参数二维码,未关注推送
+                            $EventKey = $postObj->EventKey; //事件KEY值，qrscene_为前缀,后面为二维码的参数值
+                            $Ticket   = $postObj->Ticket;   //二维码的ticket
+                        }else{
+                            // 普通关注
+                            $resultStr = $this->baseText($postObj, $options->welcome);
+                        }                        
                         break;
                     case 'unsubscribe'			:   //取消订阅事件
                         break;
                     case 'scan'					:   //扫描带参数二维码事件(用户已关注)
+                        $EventKey = $postObj->EventKey;// 事件KEY值，是一个32位无符号整数，即创建二维码时的二维码scene_id
+                        $Ticket   = $postObj->Ticket;  //二维码的ticket
+                        break;
+                    case 'templatesendjobfinish':   //模板消息发送结果提醒
+                        $status = $postObj->Status;
+                        if($status == 'success'){
+                            // 送达成功
+                        }elseif($status == 'failed:user block'){
+                            // 送达由于用户拒收
+                        }elseif($status == 'failed: system failed'){
+                            // 其他原因
+                        }else{
+                            echo "success";
+                        }
                         break;
                     case 'location'				:   //上报地理位置事件
                         break;
@@ -126,13 +150,17 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                     case 'scancode_push'		:   //自定义菜单事件（扫码推事件的事件推送）
                         break;
                     case 'scancode_waitmsg'		:   //自定义菜单事件（扫码推事件且弹出“消息接收中”提示框的事件推送）
-                        $ScanType = '';
+                        $ScanType = $postObj->ScanCodeInfo->ScanType;
+                        $ScanResult = $postObj->ScanCodeInfo->ScanResult;
                         //扫码类型 ScanType
                         //扫码结果 ScanResult
                         switch($ScanType){
                             case 'qrcode':	//二维码
+                                $resultStr = $this->baseText($postObj, $ScanResult);
                                 break;
                             case 'barcode':	//条码
+                                $arr = explode(',',$ScanResult);
+                                $resultStr = $this->baseText($postObj,'条码类型：'. $arr['0'] ."\n".'内容：'. $arr['1']);
                                 break;
                             default :
                                 break;
