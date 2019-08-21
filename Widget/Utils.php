@@ -8,33 +8,41 @@ class Utils {
     private static $options;
 	private static $access_token;
     public static function getAccessToken(){
-        $db = Typecho_Db::get();
-        $WCH_expires_in = Typecho_Widget::widget('Widget_Options')->WCH_expires_in;
-        $WCH_access_token = Typecho_Widget::widget('Widget_Options')->WCH_access_token;
-        self::$options = Helper::options()->plugin('WeChatHelper');
-        if(isset(self::$options->WCH_appid) && isset(self::$options->WCH_appsecret)){
-            if(isset($WCH_access_token) && isset($WCH_expires_in) && $WCH_expires_in > time()){
-                self::$access_token = $WCH_access_token;
-                return $WCH_access_token;
-            }else{
-                $client = Typecho_Http_Client::get();
-                $params = array('grant_type' => 'client_credential','appid' => self::$options->WCH_appid, 'secret' => self::$options->WCH_appsecret);
-                $response = $client->setQuery($params)->send(self::API_URL_PREFIX.self::AUTH_URL);
-                $response = json_decode($response);
-                if(isset($response->errcode)){
-                    //throw new Typecho_Plugin_Exception(_t('对不起，请求错误。ErrCode：'.$response->errcode.' - ErrMsg：'.$response->errmsg));
-                    return NULL;
-                }else{
-                    $db->query($db->update('table.options')->rows(array('value' => $response->access_token))->where('name = ?', 'WCH_access_token'));
-                    $db->query($db->update('table.options')->rows(array('value' => time() + $response->expires_in))->where('name = ?', 'WCH_expires_in'));
-                    self::$access_token = $response->access_token;
-                    return $response->access_token;
-                }
-            }
-        }else{
-            //throw new Typecho_Plugin_Exception(_t('对不起, 请先在高级功能中填写正确的APP ID和APP Secret。'));
-            return NULL;
-        }
+		//取redis缓存
+		$C = new Typecho_Cache();
+		$WCH_access_token = $C->get('WCH_access_token');
+		$WCH_expires_in = $C->get('WCH_expires_in');
+        //$WCH_expires_in = Typecho_Widget::widget('Widget_Options')->WCH_expires_in;
+        //$WCH_access_token = Typecho_Widget::widget('Widget_Options')->WCH_access_token;	
+		if(isset($WCH_access_token) && isset($WCH_expires_in) && $WCH_expires_in > time()){
+			self::$access_token = $WCH_access_token;
+			return $WCH_access_token;
+		}else{
+			self::$options = Helper::options()->plugin('WeChatHelper');
+			if(isset(self::$options->WCH_appid) && isset(self::$options->WCH_appsecret)){
+				$client = Typecho_Http_Client::get();
+				$params = array('grant_type' => 'client_credential','appid' => self::$options->WCH_appid, 'secret' => self::$options->WCH_appsecret);
+				$response = $client->setQuery($params)->send(self::API_URL_PREFIX.self::AUTH_URL);
+				$response = json_decode($response);
+				if(isset($response->errcode)){
+					//throw new Typecho_Plugin_Exception(_t('对不起，请求错误。ErrCode：'.$response->errcode.' - ErrMsg：'.$response->errmsg));
+					return NULL;
+				}else{
+					//存数据库
+					$db = Typecho_Db::get();
+					$db->query($db->update('table.options')->rows(array('value' => $response->access_token))->where('name = ?', 'WCH_access_token'));
+					$db->query($db->update('table.options')->rows(array('value' => time() + $response->expires_in))->where('name = ?', 'WCH_expires_in'));
+					self::$access_token = $response->access_token;
+					//存redis缓存
+					$C->set('WCH_access_token',$response->access_token,$response->expires_in-500);
+					$C->set('WCH_expires_in',time()+$response->expires_in,$response->expires_in-500);
+					return $response->access_token;
+				}
+			}else{
+				//throw new Typecho_Plugin_Exception(_t('对不起, 请先在高级功能中填写正确的APP ID和APP Secret。'));
+				return NULL;
+			}
+		}	
     }
     /**
 	 * 发送模板消息

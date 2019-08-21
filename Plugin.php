@@ -1,6 +1,6 @@
 <?php
 /**
- * Typecho微信助手
+ * Typecho微信助手 <strong style="color:red;">依赖Redis缓存</strong>
  * 对<a href="https://github.com/binjoo/WeChatHelper" target="_blank">冰剑</a>进行精简的版本。
  *
  * @package WeChatHelper

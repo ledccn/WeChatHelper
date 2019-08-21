@@ -25,7 +25,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
      * @return Typecho_Db_Query
      */
     public function select(){
-
+		return $this->db->select()->from('table.wch_users');
 	}
 
     /**
@@ -78,18 +78,35 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	 */
 	public function send() {
 		$SCKEY = substr(trim($this->request->getPathInfo(),'/'),0,-5);
-		p($this->request->getPathInfo());
+		//取缓存
+		$C = new Typecho_Cache();
+		$cacheSckey = $C->get($SCKEY);
+		if(empty($cacheSckey)){
+			$obj = $this->select()->where('table.wch_users.token = ?', $SCKEY);
+			p($obj);
+			if ($obj) {
+				# code...
+			} else {
+				# code...
+			}
+			
+		}
+		//p($this->request->getPathInfo());
 		$openid = 'otyuMwpgPHPbdKtHGK6niU4D9vnQ';
 		$text = $this->request->get('text');
 		$desp = $this->request->get('desp');
 		$url = 'http://ledc.cn/';
 		$params = self::ok($openid,$text,$desp,$url);
-		
+		//redis队列
+		$redis = new Redis();
+		$redis->connect('127.0.0.1',6379);
+		$redis->rpush("wechatTemplateMessage",$params);
+		//$C = new Typecho_Cache();
+		//$C->set($openid,$params,7200);
 		echo $SCKEY;
 		p($params);
 		//p(Utils::sendTemplateMessage($params));
-		//p($_SERVER);
-		p(unserialize(Helper::options()->panelTable));	
+		//p(unserialize(Helper::options()->panelTable));	
 	}
 	/**
 	 * @brief 模板消息公共部分
