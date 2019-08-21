@@ -7,56 +7,77 @@
  * @date 2018年4月12日 23:02:26
  * @version 1.0
  */
-class WeChatHelper_Widget_Send extends Widget_Abstract implements Widget_Interface_Do
+class WeChatHelper_Widget_Send extends Widget_Abstract
 {
 	/**
 	 * 构造方法，配置应用信息
-	 * @param array $token
+	 * @param array 
 	 */
 	public function __construct($request, $response, $params = NULL) {
         parent::__construct($request, $response, $params);
-        $this->siteUrl = Helper::options()->siteUrl;
     }
 
-    public function select() {
-        return ;
-    }
-    public function insert(array $options) {
-        return ;
-    }
-    public function update(array $options, Typecho_Db_Query $condition){
-        return ;
-    }
-    public function delete(Typecho_Db_Query $condition){
-        return ;
-    }
-    public function size(Typecho_Db_Query $condition){
-        return ;
-    }
-	/**
-     * 接口需要实现的入口函数
+    /**
+     * 查询方法
      *
      * @access public
-     * @return void
+     * @return Typecho_Db_Query
      */
-    public function action(){
-		echo 'yes!!';
+    public function select(){
+
+	}
+
+    /**
+     * 获得所有记录数
+     *
+     * @access public
+     * @param Typecho_Db_Query $condition 查询对象
+     * @return integer
+     */
+    public function size(Typecho_Db_Query $condition){
+
+	}
+
+    /**
+     * 增加记录方法
+     *
+     * @access public
+     * @param array $rows 字段对应值
+     * @return integer
+     */
+    public function insert(array $rows){
+
+	}
+
+    /**
+     * 更新记录方法
+     *
+     * @access public
+     * @param array $rows 字段对应值
+     * @param Typecho_Db_Query $condition 查询对象
+     * @return integer
+     */
+    public function update(array $rows, Typecho_Db_Query $condition){
+
+	}
+
+    /**
+     * 删除记录方法
+     *
+     * @access public
+     * @param Typecho_Db_Query $condition 查询对象
+     * @return integer
+     */
+    public function delete(Typecho_Db_Query $condition){
+
 	}
 	/**
 	 * @brief 发送模板消息
 	 * @return array 或 字符串
 	 */
-	public function send()
-	{
+	public function send() {
+		p($this->options->routingTable);
 		echo 'yes!!';
-	}
-	/**
-	 * @brief 获取DB中微信的配置参数
-	 * @return array 或 字符串
-	 */
-	public static function config($key = null)
-	{
-		return array();
 	}
 	/**
 	 * @brief 模板消息公共部分
@@ -108,7 +129,6 @@ class WeChatHelper_Widget_Send extends Widget_Abstract implements Widget_Interfa
 	 */
 	public static function sellerReg($openid,$name = '',$mobile = '',$url = '')
 	{
-		$id = self::getTemplateId(__FUNCTION__);
 		$templateId = 'nnBn_cKwtES-J3khuW2zKA3KLdfZ0Cl7dJI5qq7n4Ac';
 		$data = [
 			'first'		=>	['value' => "亲爱的管理员，有商户申请加盟平台，请及时审核！",'color' => '#0000ff'],

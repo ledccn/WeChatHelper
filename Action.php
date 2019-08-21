@@ -248,6 +248,8 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     public function action(){
 		if($this->request->is('menus')){  //菜单业务
             Typecho_Widget::widget('WeChatHelper_Widget_Menus')->action();
+        }else if($this->request->is('users')){  //用户业务
+            Typecho_Widget::widget('WeChatHelper_Widget_Users')->action();
         }
     }
     //校验签名
