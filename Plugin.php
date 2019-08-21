@@ -89,23 +89,23 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                     (13, 'sub_button', '拍照相册', 'pic_photo_or_album', 'photo', 34, 4, 4, 1566290488);");
                 //创建用户管理表
                 $db->query("CREATE TABLE IF NOT EXISTS " . $db->getPrefix() . 'wch_users' . " (
-                        `uid` int(11) NOT NULL AUTO_INCREMENT,
-                        `openid` varchar(50) DEFAULT '',
-                        `nickname` varchar(100) DEFAULT '',
-                        `sex` char(1) DEFAULT '',
-                        `language` varchar(50) DEFAULT '',
-                        `city` varchar(50) DEFAULT '',
-                        `province` varchar(50) DEFAULT '',
-                        `country` varchar(50) DEFAULT '',
-                        `headimgurl` varchar(200) DEFAULT '',
-                        `subscribe_time` int(10) DEFAULT '0',
-                        `credits` int(10) NOT NULL DEFAULT '0',
-                        `bind` int(3) DEFAULT '0',
-                        `status` char(1) DEFAULT '1',
-                        `created` int(10) DEFAULT '0',
-                        `synctime` int(10) DEFAULT '0',
-                        PRIMARY KEY (`uid`)
-                        ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+                    `uid` int(11) NOT NULL AUTO_INCREMENT,
+                    `openid` varchar(50) DEFAULT '',
+                    `nickname` varchar(100) DEFAULT '',
+                    `sex` char(1) DEFAULT '',
+                    `language` varchar(50) DEFAULT '',
+                    `city` varchar(50) DEFAULT '',
+                    `province` varchar(50) DEFAULT '',
+                    `country` varchar(50) DEFAULT '',
+                    `headimgurl` varchar(200) DEFAULT '',
+                    `subscribe_time` int(10) DEFAULT '0',
+                    `credits` int(10) NOT NULL DEFAULT '0',
+                    `bind` int(3) DEFAULT '0',
+                    `status` char(1) DEFAULT '1',
+                    `created` int(10) DEFAULT '0',
+                    `synctime` int(10) DEFAULT '0',
+                    PRIMARY KEY (`uid`)
+                    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
                 //插入WCH_access_token、WCH_expires_in
                 $db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_access_token","user"=>"0","value"=>"0")));
                 $db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_expires_in","user"=>"0","value"=>"0")));
@@ -131,7 +131,6 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
      */
     public static function config(Typecho_Widget_Helper_Form $form)
     {
-
         /** 用户添加订阅欢迎语 **/
         $welcome = new Typecho_Widget_Helper_Form_Element_Textarea('welcome', NULL, '欢迎！' . chr(10) . '发送\'h\'让小的给您介绍一下！', '订阅欢迎语', '用户订阅之后主动发送的一条欢迎语消息。');
         $form->addInput($welcome);
@@ -165,7 +164,6 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
         $dropTable = new Typecho_Widget_Helper_Form_Element_Radio('dropTable',array('1' => _t('开启'), '0' => _t('关闭')),0,
             _t('<span style="color:#B94A48">数据删除</span>'), _t('<span style="color:#B94A48">开启后，禁用插件会删除插件设置数据和数据表。</span>'));
         $form->addInput($dropTable);
-
     }
 
     /**

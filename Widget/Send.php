@@ -7,6 +7,7 @@
  * @date 2018年4月12日 23:02:26
  * @version 1.0
  */
+include_once 'Utils.php';
 class WeChatHelper_Widget_Send extends Widget_Abstract
 {
 	/**
@@ -76,8 +77,14 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	 * @return array 或 字符串
 	 */
 	public function send() {
-		p($this->options->routingTable);
-		echo 'yes!!';
+		$openid = 'otyuMwpgPHPbdKtHGK6niU4D9vnQ';
+		$text = $openid;
+		$desp = date("Y-m-d H:i:s");
+		$url = 'http://ledc.cn/';
+		$params = self::ok($openid,$text,$desp,$url);
+		p($params);
+		p(Utils::sendTemplateMessage($params));
+		p($_SERVER);
 	}
 	/**
 	 * @brief 模板消息公共部分
@@ -108,7 +115,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	 */
 	public static function ok($openid,$orderMoneySum = '',$orderProductName = '',$url = '')
 	{
-		$templateId = 'niGho0GS_gORGtqrrZWYC9ZllJpKdp3RokGl2iHAFes';
+		$templateId = 'muwysFooMZTtJDLLtyfutxhmnCdYmAqe8D4HlJnpNsw';
 		$data = [
 			'first'	=>	['value' => "我们已收到您的货款，开始为您打包商品，请耐心等待！",'color' => '#0000ff'],
 			'orderMoneySum'	=>	['value' => $orderMoneySum,'color' => '#339933'],
@@ -129,7 +136,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	 */
 	public static function sellerReg($openid,$name = '',$mobile = '',$url = '')
 	{
-		$templateId = 'nnBn_cKwtES-J3khuW2zKA3KLdfZ0Cl7dJI5qq7n4Ac';
+		$templateId = 'hFPXzTUgjlh1Qy5vUTQ8O5OCHVE_ZZnPPNiwCqXl2fc';
 		$data = [
 			'first'		=>	['value' => "亲爱的管理员，有商户申请加盟平台，请及时审核！",'color' => '#0000ff'],
 			'keyword1'	=>	['value' => $name,'color' => '#339933'],

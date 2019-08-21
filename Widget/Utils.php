@@ -68,7 +68,7 @@ class Utils {
 	public static function sendTemplateMessage($data){
         if (self::getAccessToken()) {
             $client = Typecho_Http_Client::get();
-            $response = $client->setData(self::json_encode($data))->send(self::API_URL_PREFIX.self::TEMPLATE_SEND_URL.self::access_token);
+            $response = $client->setData(self::json_encode($data))->send(self::API_URL_PREFIX.self::TEMPLATE_SEND_URL.self::$access_token);
             if($response){
                 $json = json_decode($response,true);
                 if (!$json || !empty($json['errcode'])) {
