@@ -8,7 +8,8 @@
 class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     private $db;
-    private $_debug = true;     //调试开关false true
+    private $_debug = true;         //调试开关true false，记录微信发来的所有数据
+    private $_debugResult = false;   //调试开关true false，记录本接口返回的数据
     private $_WeChatHelper;
     private $_textTpl;
     private $_imageTpl;
@@ -80,7 +81,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     public function postAction(){
         $options = $this->_WeChatHelper;
         $postStr = file_get_contents("php://input");
-        //调试
+        //调试：记录微信发来的所有数据
         if ($this->_debug) {
             $dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper/';
             $myfile = $dir.'/wechatPostDebug.txt';
@@ -192,15 +193,6 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                                 $contentStr = "s 关键词 搜索日志\n ";
                                 $resultStr = $this->baseText($postObj, $contentStr);
                                 break;
-                            case 'l':   //手气不错
-                                $resultStr = $this->luckyPost($postObj);
-                                break;
-                            case 'n':   //最新文章
-                                $resultStr = $this->newPost($postObj);
-                                break;
-                            case 'r':   //随机文章
-                                $resultStr = $this->randomPost($postObj);
-                                break;
                             case 's':   //搜索
                                 $searchParam = substr($keyword, 1);
                                 $resultStr = $this->searchPost($postObj, $searchParam);
@@ -242,8 +234,8 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         }else {
             die('Token验证不通过');
         }
-        //调试
-        if ($this->_debug) {
+        //调试：记录本接口返回的数据
+        if ($this->_debugResult) {
             $dir = __TYPECHO_ROOT_DIR__ . __TYPECHO_PLUGIN_DIR__ . '/WeChatHelper/';
             $myfile = $dir.'wechatResultDebug.txt';
             $file_pointer = @fopen($myfile,"a");
