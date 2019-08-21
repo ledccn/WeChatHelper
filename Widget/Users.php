@@ -199,6 +199,7 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
 
     /**
      * 同步微信用户信息
+     * https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140839
      */
     public function syncUserInfo(){
         $uid = $this->request->get('uid');
@@ -237,7 +238,7 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
         $this->widget('Widget_Notice')->set(_t('微信用户 OpenID %s 更新成功！', $user['openid']), 'success');
         $this->response->redirect(Helper::url('WeChatHelper/Page/Users.php&page='.$this->_currentPage));
     }
-
+    //https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140839
     public function apiGetUser($openid, $accessToken = NULL){
         if(!$accessToken){
             $accessToken = Utils::getAccessToken();
