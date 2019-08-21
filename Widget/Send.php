@@ -77,14 +77,19 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	 * @return array 或 字符串
 	 */
 	public function send() {
+		$SCKEY = substr(trim($this->request->getPathInfo(),'/'),0,-5);
+		p($this->request->getPathInfo());
 		$openid = 'otyuMwpgPHPbdKtHGK6niU4D9vnQ';
-		$text = $openid;
-		$desp = date("Y-m-d H:i:s");
+		$text = $this->request->get('text');
+		$desp = $this->request->get('desp');
 		$url = 'http://ledc.cn/';
 		$params = self::ok($openid,$text,$desp,$url);
+		
+		echo $SCKEY;
 		p($params);
-		p(Utils::sendTemplateMessage($params));
-		p($_SERVER);
+		//p(Utils::sendTemplateMessage($params));
+		//p($_SERVER);
+		p(unserialize(Helper::options()->panelTable));	
 	}
 	/**
 	 * @brief 模板消息公共部分
