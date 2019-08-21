@@ -82,17 +82,17 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                     `created` int(10) DEFAULT '0',
                     PRIMARY KEY (`mid`)
                   ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
-/*
+                //插入默认菜单数据
                 $db->query("INSERT INTO `" . $db->getPrefix() . 'wch_menus' . "` (`mid`, `level`, `name`, `type`, `value`, `sort`, `order`, `parent`, `created`) VALUES
-                    (1, 'button', '首页', 'view', 'https://www.iyuu.cn/', 10, 1, 0, 1503804104),
-                    (2, 'button', '最新文章', 'click', 'n', 20, 2, 0, 1503804141),
-                    (3, 'button', '其他', 'click', NULL, 30, 3, 0, 1503804153),
-                    (4, 'sub_button', '随机文章', 'click', 'r', 31, 1, 3, 1503807202),
-                    (5, 'sub_button', '手气不错', 'click', 'l', 32, 2, 3, 1503824995),
-                    (6, 'sub_button', '扫码', 'scancode_waitmsg', 'scan', 35, 5, 3, 1566277322),
-                    (7, 'sub_button', '地理位置', 'location_select', 'location_select', 33, 3, 3, 1566289962),
-                    (8, 'sub_button', '拍照相册', 'pic_photo_or_album', 'photo', 34, 4, 3, 1566290488);");
-*/
+                    (1, 'button', '首页', 'click', 'https://www.iyuu.cn', 10, 1, 0, 1566383054),
+                    (2, 'button', '最新文章', 'click', 'n', 20, 2, 0, 1566383095),
+                    (3, 'button', '功能', 'click', NULL, 30, 3, 0, 1566383145),
+                    (4, 'sub_button', '随机文章', 'click', 'r', 31, 1, 3, 1566383166),
+                    (5, 'sub_button', '手气不错', 'click', 'l', 32, 2, 3, 1566383187),
+                    (6, 'sub_button', '地理位置', 'location_select', 'location', 33, 3, 3, 1566383279),
+                    (7, 'sub_button', '拍照相册', 'pic_photo_or_album', 'photo', 34, 4, 3, 1566383312),
+                    (8, 'sub_button', '扫一扫', 'scancode_waitmsg', 'scancode', 35, 5, 3, 1566383356);");
+
                 //创建用户管理表
                 $db->query("CREATE TABLE IF NOT EXISTS " . $db->getPrefix() . 'wch_users' . " (
                     `uid` int(11) NOT NULL AUTO_INCREMENT COMMENT '用户uid',
@@ -154,7 +154,7 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
         $welcome = new Typecho_Widget_Helper_Form_Element_Textarea('welcome', NULL, '欢迎！' . chr(10) . '发送\'h\'让小的给您介绍一下！', '订阅欢迎语', '用户订阅之后主动发送的一条欢迎语消息。');
         $form->addInput($welcome);
         /** 图文默认图片 **/
-        $imageDefault = new Typecho_Widget_Helper_Form_Element_Text('imageDefault', NULL, 'https://cdn.iyuu.cn/usr/uploads/2019/08/1364235608.jpg', _t('默认显示图片'), '图片链接，支持JPG、PNG格式，推荐图为80*80。');
+        $imageDefault = new Typecho_Widget_Helper_Form_Element_Text('imageDefault', NULL, 'https://iyuu-1251099245.file.myqcloud.com/usr/uploads/2019/08/1175510365.jpg', _t('默认显示图片'), '图片链接，支持JPG、PNG格式，推荐图为80*80。');
         $form->addInput($imageDefault);
         /** 返回最大结果条数 **/
         $imageNum = new Typecho_Widget_Helper_Form_Element_Text('imageNum', NULL, '5', _t('返回图文数量'), '图文消息数量，限制为8条以内。');
@@ -180,7 +180,7 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
         $form->addInput($appsecret);
 
         //禁用插件是否删除数据
-        $dropTable = new Typecho_Widget_Helper_Form_Element_Radio('dropTable',array('1' => _t('开启'), '0' => _t('关闭')),0,
+        $dropTable = new Typecho_Widget_Helper_Form_Element_Radio('dropTable',array('1' => _t('开启'), '0' => _t('关闭')),1,
             _t('<span style="color:#B94A48">数据删除</span>'), _t('<span style="color:#B94A48">开启后，禁用插件会删除插件设置数据和数据表。</span>'));
         $form->addInput($dropTable);
     }
