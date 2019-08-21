@@ -49,12 +49,13 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
             if ("Pdo_Mysql" === $db->getAdapterName() || "Mysql" === $db->getAdapterName()) {
                 $db->query("drop table " . $db->getPrefix() . "wch_menus, ".$db->getPrefix()."wch_users");
                 $db->query($db->sql()->delete('table.options')->where('name like ?', "WCH_%"));
+                $db->query("drop table " . $db->getPrefix() . "wch_template_message ");
             }
         }
         Helper::removeRoute('wechat');
         Helper::removeRoute('send');
         Helper::removeAction('WeChat');
-        $index = Helper::addMenu('微信助手');
+        $index = Helper::removeMenu('微信助手');
         Helper::removePanel($index, 'WeChatHelper/Page/Users.php');
         Helper::removePanel($index, 'WeChatHelper/Page/Menus.php');
     }
@@ -65,6 +66,9 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
 		try {
             $db = Typecho_Db::get();
             if ("Pdo_Mysql" === $db->getAdapterName() || "Mysql" === $db->getAdapterName()) {
+                //插入WCH_access_token、WCH_expires_in
+                $db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_access_token","user"=>"0","value"=>"0")));
+                $db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_expires_in","user"=>"0","value"=>"0")));
                 //创建自定义菜单表
                 $db->query("CREATE TABLE IF NOT EXISTS " . $db->getPrefix() . 'wch_menus' . " (
                     `mid` int(11) NOT NULL AUTO_INCREMENT,
@@ -77,42 +81,57 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                     `parent` int(11) DEFAULT '0',
                     `created` int(10) DEFAULT '0',
                     PRIMARY KEY (`mid`)
-                    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+                  ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+/*
                 $db->query("INSERT INTO `" . $db->getPrefix() . 'wch_menus' . "` (`mid`, `level`, `name`, `type`, `value`, `sort`, `order`, `parent`, `created`) VALUES
                     (1, 'button', '首页', 'view', 'https://www.iyuu.cn/', 10, 1, 0, 1503804104),
-                    (3, 'button', '最新文章', 'click', 'n', 20, 2, 0, 1503804141),
-                    (4, 'button', '其他', 'click', NULL, 30, 3, 0, 1503804153),
-                    (7, 'sub_button', '随机文章', 'click', 'r', 31, 1, 4, 1503807202),
-                    (8, 'sub_button', '手气不错', 'click', 'l', 32, 2, 4, 1503824995),
-                    (9, 'sub_button', '扫码', 'scancode_waitmsg', 'scan', 35, 5, 4, 1566277322),
-                    (12, 'sub_button', '地理位置', 'location_select', 'location_select', 33, 3, 4, 1566289962),
-                    (13, 'sub_button', '拍照相册', 'pic_photo_or_album', 'photo', 34, 4, 4, 1566290488);");
+                    (2, 'button', '最新文章', 'click', 'n', 20, 2, 0, 1503804141),
+                    (3, 'button', '其他', 'click', NULL, 30, 3, 0, 1503804153),
+                    (4, 'sub_button', '随机文章', 'click', 'r', 31, 1, 3, 1503807202),
+                    (5, 'sub_button', '手气不错', 'click', 'l', 32, 2, 3, 1503824995),
+                    (6, 'sub_button', '扫码', 'scancode_waitmsg', 'scan', 35, 5, 3, 1566277322),
+                    (7, 'sub_button', '地理位置', 'location_select', 'location_select', 33, 3, 3, 1566289962),
+                    (8, 'sub_button', '拍照相册', 'pic_photo_or_album', 'photo', 34, 4, 3, 1566290488);");
+*/
                 //创建用户管理表
                 $db->query("CREATE TABLE IF NOT EXISTS " . $db->getPrefix() . 'wch_users' . " (
-                    `uid` int(11) NOT NULL AUTO_INCREMENT,
-                    `openid` varchar(50) DEFAULT '',
-                    `nickname` varchar(100) DEFAULT '',
-                    `sex` char(1) DEFAULT '',
-                    `language` varchar(50) DEFAULT '',
-                    `city` varchar(50) DEFAULT '',
-                    `province` varchar(50) DEFAULT '',
-                    `country` varchar(50) DEFAULT '',
-                    `headimgurl` varchar(200) DEFAULT '',
-                    `subscribe_time` int(10) DEFAULT '0',
-                    `credits` int(10) NOT NULL DEFAULT '0',
-                    `bind` int(3) DEFAULT '0',
-                    `status` char(1) DEFAULT '1',
-                    `created` int(10) DEFAULT '0',
-                    `synctime` int(10) DEFAULT '0',
-                    PRIMARY KEY (`uid`)
-                    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
-                //插入WCH_access_token、WCH_expires_in
-                $db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_access_token","user"=>"0","value"=>"0")));
-                $db->query($db->sql()->insert('table.options')->rows(array("name"=>"WCH_expires_in","user"=>"0","value"=>"0")));
+                    `uid` int(11) NOT NULL AUTO_INCREMENT COMMENT '用户uid',
+                    `openid` varchar(50) DEFAULT NULL COMMENT '微信用户唯一标识',
+                    `nickname` varchar(100) DEFAULT NULL COMMENT '昵称',
+                    `sex` char(1) DEFAULT NULL COMMENT '性别1男,2女',
+                    `language` varchar(50) DEFAULT NULL COMMENT '用户的语言',
+                    `city` varchar(50) DEFAULT NULL COMMENT '城市',
+                    `province` varchar(50) DEFAULT NULL COMMENT '省份',
+                    `country` varchar(50) DEFAULT NULL COMMENT '国家',
+                    `headimgurl` varchar(200) DEFAULT NULL COMMENT '用户头像',
+                    `subscribe_time` int(10) DEFAULT '0' COMMENT '关注时间',
+                    `credits` int(10) NOT NULL DEFAULT '0' COMMENT '积分',
+                    `bind` int(10) DEFAULT NULL COMMENT '是否绑定',
+                    `status` char(1) DEFAULT '1' COMMENT '1已关注,0未关注',
+                    `created` int(10) DEFAULT '0' COMMENT '创建时间',
+                    `synctime` int(10) DEFAULT '0' COMMENT '同步时间',
+                    `token` varchar(50) DEFAULT NULL COMMENT '消息token',
+                    `thSendNum` int(10) NOT NULL DEFAULT '0' COMMENT '当月发送消息',
+                    `SendNum` int(10) NOT NULL DEFAULT '0' COMMENT '累计发送',
+                    PRIMARY KEY (`uid`),
+                    UNIQUE KEY `openid` (`openid`),
+                    KEY `token` (`token`)
+                  ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+                //创建微信模板消息发送记录表
+                $db->query("CREATE TABLE IF NOT EXISTS " . $db->getPrefix() . 'wch_template_message' . " (
+                    `mid` int(16) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+                    `uid` int(10) NOT NULL COMMENT '关联wch_users表',
+                    `MsgId` int(20) DEFAULT NULL COMMENT '第三方消息id',
+                    `status` int(1) NOT NULL DEFAULT '0' COMMENT '消息投递状态',
+                    `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                    PRIMARY KEY (`mid`),
+                    UNIQUE KEY `MsgId` (`MsgId`),
+                    KEY `uid` (`uid`)
+                  ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
             } else {
                 throw new Typecho_Plugin_Exception(_t('对不起, 本插件仅支持MySQL数据库。'));
             }
-            return "数据表安装成功！";
+            return "数据表安装成功！微信助手已经成功激活，请进入设置Token!";
         } catch (Typecho_Db_Exception $e) {
             if ('23000' == $e->getCode()) {
                 $msg = '数据表已存在!微信助手已经成功激活，请进入设置Token!';
