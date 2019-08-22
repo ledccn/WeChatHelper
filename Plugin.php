@@ -110,6 +110,7 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                     `status` char(1) DEFAULT '1' COMMENT '1已关注,0未关注',
                     `created` int(10) DEFAULT '0' COMMENT '创建时间',
                     `synctime` int(10) DEFAULT '0' COMMENT '同步时间',
+                    `salt` varchar(15) NOT NULL COMMENT '盐值sha1(openid+time+盐)',
                     `token` varchar(50) DEFAULT NULL COMMENT '消息token',
                     `thSendNum` int(10) NOT NULL DEFAULT '0' COMMENT '当月发送消息',
                     `SendNum` int(10) NOT NULL DEFAULT '0' COMMENT '累计发送',
@@ -122,12 +123,15 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                     `mid` int(16) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
                     `uid` int(10) NOT NULL COMMENT '关联wch_users表',
                     `MsgId` int(20) DEFAULT NULL COMMENT '第三方消息id',
+                    `message` text NOT NULL COMMENT '消息体',
+                    `hash` varchar(50) NOT NULL COMMENT '消息读取sha1(openid+time+盐)',
                     `status` int(1) NOT NULL DEFAULT '0' COMMENT '消息投递状态',
                     `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                     PRIMARY KEY (`mid`),
+                    UNIQUE KEY `hash` (`hash`),
                     UNIQUE KEY `MsgId` (`MsgId`),
                     KEY `uid` (`uid`)
-                  ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+                    ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
             } else {
                 throw new Typecho_Plugin_Exception(_t('对不起, 本插件仅支持MySQL数据库。'));
             }

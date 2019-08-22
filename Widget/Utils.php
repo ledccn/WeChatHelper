@@ -34,8 +34,8 @@ class Utils {
 					$db->query($db->update('table.options')->rows(array('value' => time() + $response->expires_in))->where('name = ?', 'WCH_expires_in'));
 					self::$access_token = $response->access_token;
 					//存redis缓存
-					$C->set('WCH_access_token',$response->access_token,$response->expires_in-500);
-					$C->set('WCH_expires_in',time()+$response->expires_in,$response->expires_in-500);
+					$C->set('WCH_access_token',$response->access_token,$response->expires_in-300);
+					$C->set('WCH_expires_in',time()+$response->expires_in,$response->expires_in-300);
 					return $response->access_token;
 				}
 			}else{
