@@ -8,6 +8,7 @@
 class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     private $db;
+    private $redis;
     private $_debug = true;         //调试开关true false，记录微信发来的所有数据
     private $_debugResult = false;   //调试开关true false，记录本接口返回的数据
     private $_WeChatHelper;
@@ -21,6 +22,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         parent::__construct($request, $response, $params);
 
         $this->db = Typecho_Db::get();
+        $this->redis = new Typecho_Cache();
         $this->_WeChatHelper = Helper::options()->plugin('WeChatHelper');
         $this->_imageNum = $this->_WeChatHelper->imageNum;
         $this->_imageDefault = $this->_WeChatHelper->imageDefault;
@@ -90,9 +92,8 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             @fwrite($file_pointer,"\r\n\r\n");
             @fclose($file_pointer);
         }
-
+        //微信消息处理：主流程
         if ($this->checkSignature($options->token) && !empty($postStr)){
-            $resultStr = '';    //响应初始化，勿删 success
             $postObj = simplexml_load_string($postStr, 'SimpleXMLElement', LIBXML_NOCDATA);
             #$postArr = (array)$postObj;     //转数组
             $fromUsername = $postObj->FromUserName;
@@ -281,42 +282,49 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
     //最新
     private function newPost($postObj){
         $ArticleCount = $postObj->MsgType == 'event' ? $this->_imageNum : 1;
-        $db = Typecho_Db::get();
-        $sql = $db->select()->from('table.contents')
+        #redis取
+        $result = $this->redis->get('wechat_newpost'.$ArticleCount);
+        if (empty($result)){
+            $sql = $this->db->select()->from('table.contents')
             ->where('table.contents.status = ?', 'publish')
             ->where('table.contents.type = ?', 'post')
             ->order('table.contents.created', Typecho_Db::SORT_DESC)
             ->limit($ArticleCount);
-        $result = $db->fetchAll($sql);
-
+            $result = $this->db->fetchAll($sql);
+            #redis存
+            $this->redis->set('wechat_newpost'.$ArticleCount,$result,7200);
+        }
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
     }
     //随机
     private function randomPost($postObj){
         $ArticleCount = $postObj->MsgType == 'event' ? $this->_imageNum : 1;
-        $db = Typecho_Db::get();
-        $sql = $db->select()->from('table.contents')
+        #redis取
+        $result = $this->redis->get('wechat_randomPost'.rand(1,10));
+        if (empty($result)){
+            $sql =  $this->db->select()->from('table.contents')
             ->where('table.contents.status = ?','publish')
             ->where('table.contents.type = ?', 'post')
             ->where('table.contents.created <= unix_timestamp(now())', 'post') //添加这一句避免未达到时间的文章提前曝光
             ->limit($ArticleCount)
             ->order('RAND()');
-        $result = $db->fetchAll($sql);
-
+            $result =  $this->db->fetchAll($sql);
+            #redis存
+            $this->redis->set('wechat_randomPost'.rand(1,10),$result,7200);
+        }
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
     }
     //手气不错
     private function luckyPost($postObj){
-        $db = Typecho_Db::get();
-        $sql = $db->select()->from('table.contents')
+        $sql =  $this->db->select()->from('table.contents')
             ->where('table.contents.status = ?','publish')
             ->where('table.contents.type = ?', 'post')
             ->where('table.contents.password IS NULL')
             ->limit(1)
             ->order('RAND()');
-        $result = $db->fetchAll($sql);
+        $result =  $this->db->fetchAll($sql);
 
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
@@ -326,16 +334,21 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         $ArticleCount = $postObj->MsgType == 'event' ? $this->_imageNum : 1;
         $searchParam = '%' . str_replace(' ', '%', $searchParam) . '%';
 
-        $db = Typecho_Db::get();
-        $sql = $db->select()->from('table.contents')
+        $sql =  $this->db->select()->from('table.contents')
             ->where('table.contents.password IS NULL')
             ->where('table.contents.title LIKE ? OR table.contents.text LIKE ?', $searchParam, $searchParam)
             ->where('table.contents.status = ?', 'publish')
             ->where('table.contents.type = ?', 'post')
             ->order('table.contents.created', Typecho_Db::SORT_DESC)
             ->limit($ArticleCount);
-        $result = $db->fetchAll($sql);
-
+        #redis取
+        $hash = md5($sql);
+        $result = $this->redis->get('wechat_searchPost'.$hash);
+        if (empty($result)){
+            $result =  $this->db->fetchAll($sql);
+            #redis存
+            $this->redis->set('wechat_searchPost'.$hash,$result,300);
+        }
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
     }
