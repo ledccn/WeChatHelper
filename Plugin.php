@@ -98,7 +98,7 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                     `uid` int(11) NOT NULL AUTO_INCREMENT COMMENT '用户uid',
                     `openid` varchar(50) DEFAULT NULL COMMENT '微信用户唯一标识',
                     `nickname` varchar(100) DEFAULT NULL COMMENT '昵称',
-                    `sex` char(1) DEFAULT NULL COMMENT '性别1男,2女',
+                    `sex` tinyint(1) DEFAULT NULL COMMENT '性别1男,2女',
                     `language` varchar(50) DEFAULT NULL COMMENT '用户的语言',
                     `city` varchar(50) DEFAULT NULL COMMENT '城市',
                     `province` varchar(50) DEFAULT NULL COMMENT '省份',
@@ -107,13 +107,12 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                     `subscribe_time` int(10) DEFAULT '0' COMMENT '关注时间',
                     `credits` int(10) NOT NULL DEFAULT '0' COMMENT '积分',
                     `bind` int(10) DEFAULT NULL COMMENT '是否绑定',
-                    `status` char(1) DEFAULT '1' COMMENT '1已关注,0未关注',
+                    `status` tinyint(1) unsigned DEFAULT '1' COMMENT '1已关注,0未关注',
+                    `is_send` tinyint(1) unsigned DEFAULT '0' COMMENT '是否禁用:正常0,禁用1',
                     `created` int(10) DEFAULT '0' COMMENT '创建时间',
                     `synctime` int(10) DEFAULT '0' COMMENT '同步时间',
-                    `salt` varchar(15) NOT NULL COMMENT '盐值sha1(openid+time+盐)',
-                    `token` varchar(50) DEFAULT NULL COMMENT '消息token',
-                    `thSendNum` int(10) NOT NULL DEFAULT '0' COMMENT '当月发送消息',
-                    `SendNum` int(10) NOT NULL DEFAULT '0' COMMENT '累计发送',
+                    `token` varchar(60) DEFAULT NULL COMMENT '发送token：sha1(openid+time+盐)',
+                    `sendsum` int(10) NOT NULL DEFAULT '0' COMMENT '累计发送',
                     PRIMARY KEY (`uid`),
                     UNIQUE KEY `openid` (`openid`),
                     KEY `token` (`token`)
@@ -125,13 +124,13 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                     `MsgId` int(20) DEFAULT NULL COMMENT '第三方消息id',
                     `message` text NOT NULL COMMENT '消息体',
                     `hash` varchar(50) NOT NULL COMMENT '消息读取sha1(openid+time+盐)',
-                    `status` int(1) NOT NULL DEFAULT '0' COMMENT '消息投递状态',
+                    `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '消息投递状态',
                     `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                     PRIMARY KEY (`mid`),
                     UNIQUE KEY `hash` (`hash`),
                     UNIQUE KEY `MsgId` (`MsgId`),
                     KEY `uid` (`uid`)
-                    ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+                  ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
             } else {
                 throw new Typecho_Plugin_Exception(_t('对不起, 本插件仅支持MySQL数据库。'));
             }
