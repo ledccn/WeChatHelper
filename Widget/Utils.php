@@ -13,7 +13,7 @@ class Utils {
 		$WCH_access_token = $C->get('WCH_access_token');
 		$WCH_expires_in = $C->get('WCH_expires_in');
         //$WCH_expires_in = Typecho_Widget::widget('Widget_Options')->WCH_expires_in;
-        //$WCH_access_token = Typecho_Widget::widget('Widget_Options')->WCH_access_token;	
+        //$WCH_access_token = Typecho_Widget::widget('Widget_Options')->WCH_access_token;
 		if(isset($WCH_access_token) && isset($WCH_expires_in) && $WCH_expires_in > time()){
 			self::$access_token = $WCH_access_token;
 			return $WCH_access_token;
@@ -42,7 +42,7 @@ class Utils {
 				//throw new Typecho_Plugin_Exception(_t('对不起, 请先在高级功能中填写正确的APP ID和APP Secret。'));
 				return NULL;
 			}
-		}	
+		}
     }
     /**
 	 * 发送模板消息
@@ -87,7 +87,7 @@ class Utils {
             return false;
         }else {
             return false;
-        }		
+        }
     }
     /**
 	 * 微信api不支持中文转义的json结构
