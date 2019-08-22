@@ -1,15 +1,18 @@
 <?php
 /**
- * @copyright (c) 2018
- * @file TemplateMessage.php
- * @brief 微信模板消息数据组装类
- * @author 大卫
- * @date 2018年4月12日 23:02:26
+ * @copyright (c) 2014-2019
+ * @file send.php
+ * @brief 微信模板消息
+ * @author 大卫科技Blog
+ * @date 2019年8月22日
  * @version 1.0
+ * @link https://www.iyuu.cn
  */
 include_once 'Utils.php';
 class WeChatHelper_Widget_Send extends Widget_Abstract
 {
+	//缓存时间设置，默认1天
+	private $wchUsersExpire = 86400;
 	/**
 	 * 构造方法，配置应用信息
 	 * @param array 
@@ -24,8 +27,8 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
      * @access public
      * @return Typecho_Db_Query
      */
-    public function select(){
-		return $this->db->select()->from('table.wch_users');
+    public function select($uid = ''){
+		return $this->db->fetchRow($this->db->select('uid','openid','nickname','status','is_send','synctime','token','sendsum')->from('table.wch_users')->where('uid = ?', $uid)->limit(1));
 	}
 
     /**
@@ -73,40 +76,91 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 
 	}
 	/**
-	 * @brief 发送模板消息
-	 * @return array 或 字符串
+	 * @brief 发送模板消息 https://www.iyuu.cn/IYUU570100T24654654564654.send?text=abc&desp=defg
+	 * 接口发送token算法：IYUU + uid + T + sha1(openid+time+盐) + .send
+	 * 消息提取token算法：sha1(openid+time+盐)
 	 */
 	public function send() {
-		$SCKEY = substr(trim($this->request->getPathInfo(),'/'),0,-5);
-		//取缓存
+		$result = array();
+		//取请求token：/IYUU570100T24654654564654.send
+		$token = substr(trim($this->request->getPathInfo(),'/'),0,-5);
+		//分离用户ID
+		$uid = $this->getUid($token);
+		//缓存，取用户数据
 		$C = new Typecho_Cache();
-		$cacheSckey = $C->get($SCKEY);
-		if(empty($cacheSckey)){
-			$obj = $this->select()->where('table.wch_users.token = ?', $SCKEY);
-			p($obj);
-			if ($obj) {
-				# code...
+		$userArr = $C->get($uid);		
+		if(empty($userArr)){
+			//缓存取失败
+			$userArr = $this->select($uid);	//数据库取uid
+			if (empty($userArr)) {
+				//数据库取失败
+				//加入流控：同IP 1分钟失败10次，IP封禁30分钟；同用户 1分钟失败30次，IP封禁30分钟；
+				$result['errcode'] = 404;		//成功是0
+				$result['errmsg'] = 'token验证失败';		//请求成功ok success
+				die(Json::encode($result));
 			} else {
-				# code...
-			}
-			
+				//数据库取成功、存缓存（精简数据uid,openid,is_send,status,synctime,token,sendsum）
+				$C->set($uid,$userArr,$this->wchUsersExpire);
+			}			
 		}
-		//p($this->request->getPathInfo());
-		$openid = 'otyuMwpgPHPbdKtHGK6niU4D9vnQ';
-		$text = $this->request->get('text');
-		$desp = $this->request->get('desp');
-		$url = 'http://ledc.cn/';
-		$params = self::ok($openid,$text,$desp,$url);
+		//验证token
+		if ($userArr['token'] === $token) {
+			//获取模板消息各项参数：openid,text,desp,url
+			$openid = $userArr['openid'];
+			$text = $this->request->get('text');
+			$desp = $this->request->get('desp');
+			$url = 'https://ledc.cn/';
+			//p($userArr);
+			//is_send值：正常0，临时禁1，永久禁止2;
+			if (empty($userArr['is_send'])) {
+				//验证每天上限500条、同内容5分钟不能重复发送、不同内容1分钟30条、24小时请求超过1000次临时封禁24小时。
+			} else {
+				$msg = $userArr['is_send']==1 ? '临时禁用' : '永久禁用';
+				$result['errcode'] = 404;
+				$result['errmsg'] = '账户被'.$msg;
+				die(Json::encode($result));
+			}
+		} else {
+			$result['errcode'] = 404;		//成功是0
+			$result['errmsg'] = 'token验证失败';	//成功ok
+			die(Json::encode($result));
+		}
+		//组装模板消息
+		$TemplateMessage = self::ok($openid,$text,$desp,$url);
+		$push['uid'] = $userArr['uid'];
+		$push['data'] = $TemplateMessage;
+		p($push);
 		//redis队列
-		$redis = new Redis();
-		$redis->connect('127.0.0.1',6379);
-		$redis->rpush("wechatTemplateMessage",$params);
-		//$C = new Typecho_Cache();
-		//$C->set($openid,$params,7200);
-		echo $SCKEY;
-		p($params);
-		//p(Utils::sendTemplateMessage($params));
+		//$redis = new Redis();
+		//$redis->connect('127.0.0.1',6379);
+		//放入redis队列，返回队列总数
+		$redisNum = $C->rpush("wechatTemplateMessage",$push);
+		if (isset($redisNum) && ($redisNum>0)) {
+			$code = 0;
+			$msg = 'ok';
+			//流量监控
+			# code...
+		} else {
+			$code = -1;
+			$msg = 'server error';
+			//入队异常，发送警报
+			# code...
+		}
+		$result['errcode'] = 0;		//成功是0
+		$result['errmsg'] = $msg;	//成功ok
+		die(Json::encode($result));
+		//p(Utils::sendTemplateMessage($TemplateMessage));
+		//p($this->request->getPathInfo());
 		//p(unserialize(Helper::options()->panelTable));	
+	}
+	/**
+	 * @brief 分离token中uid
+	 * 接口发送token算法：IYUU + uid + T + sha1(openid+time+盐)
+	 * @param string $token		用户请求token
+	 */
+	public function getUid($token){
+		//验证是否iyuu开头，strpos($token,'T')>16,token总长度小于40+10+5
+		return substr($token,4,strpos($token,'T')-4);
 	}
 	/**
 	 * @brief 模板消息公共部分
