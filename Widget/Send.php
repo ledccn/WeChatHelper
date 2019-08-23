@@ -133,7 +133,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 
 		try{
 			$json = Json::encode($push);
-			p($json);
+			//p($json);
 			//放入redis队列，返回队列总数
 			$redisNum = $C->rpush("wechatTemplateMessage",$json);
 			if (isset($redisNum) && ($redisNum>0)) {
