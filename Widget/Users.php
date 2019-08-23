@@ -218,20 +218,19 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
 
         if($result->subscribe){
             $user['status'] = '1';
+            $user['openid'] = $result->openid;
+            $user['nickname'] = $result->nickname;
+            $user['sex'] = $result->sex;
+            $user['language'] = $result->language;
+            $user['city'] = $result->city;
+            $user['province'] = $result->province;
+            $user['country'] = $result->country;
+            $user['headimgurl'] = $result->headimgurl;
+            $user['subscribe_time'] = $result->subscribe_time;
+            $user['synctime'] = time();
         }else{
             $user['status'] = '0';
         }
-        $user['openid'] = $result->openid;
-        $user['nickname'] = $result->nickname;
-        $user['sex'] = $result->sex;
-        $user['language'] = $result->language;
-        $user['city'] = $result->city;
-        $user['province'] = $result->province;
-        $user['country'] = $result->country;
-        $user['headimgurl'] = $result->headimgurl;
-        $user['subscribe_time'] = $result->subscribe_time;
-        $user['synctime'] = time();
-
         $this->update($user, $this->db->sql()->where('uid = ?', $user['uid']));
 
         $this->widget('Widget_Notice')->highlight('users-uid-'.$user['uid']);
@@ -252,7 +251,7 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
         }
         return $result;
     }
-
+    //动作入口
     public function action() {
         $this->security->protect();
         $this->on($this->request->is('do=syncList'))->syncUserList();
