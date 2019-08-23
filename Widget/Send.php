@@ -106,6 +106,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 		//验证token
 		if ($userArr['token'] === $token) {
 			//p($userArr);
+
 			//is_send值：正常0，临时禁1，永久禁止2;
 			if (empty($userArr['is_send'])) {
 				//验证每天上限500条、同内容5分钟不能重复发送、不同内容1分钟30条、24小时请求超过1000次临时封禁24小时。
@@ -123,10 +124,13 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 		//获取模板消息各项参数：openid,text,desp,url
 		$push['uid'] = $userArr['uid'];
 		$push['openid'] = $userArr['openid'];
-		$push['text'] = $this->request->get('text');
-		$push['desp'] = $this->request->get('desp');
 		$push['url'] = 'https://ledc.cn/';
 		$push['template_id']= '';
+		$push['text'] = $this->request->get('text');
+		$push['desp'] = $this->request->get('desp');
+		//标题、内容长度限制
+		#code...
+
 		try{
 			$json = Json::encode($push);
 			p($json);
@@ -148,7 +152,6 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 		$result['errcode'] = $code;		//成功是0
 		$result['errmsg'] = $msg;	//成功ok
 		die(Json::encode($result));
-		//p(Utils::sendTemplateMessage($TemplateMessage));
 		//p($this->request->getPathInfo());
 		//p(unserialize(Helper::options()->panelTable));
 	}
@@ -160,71 +163,5 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	public function getUid($token){
 		//验证是否iyuu开头，strpos($token,'T')>16,token总长度小于40+10+5
 		return substr($token,4,strpos($token,'T')-4);
-	}
-	/**
-	 * @brief 模板消息公共部分
-	 * @param string $openid		用户openid
-	 * @param string $templateId	模板ID
-	 * @param array  $data			模板数据
-	 * @param string $url			跳转的url
-	 * @param string $topcolor		页头颜色
-	 */
-	public static function header($openid = null,$templateId,$data = [],$url = '')
-	{
-		$params = [
-            'touser'      => $openid,
-            'template_id' => $templateId,
-            'url'         => $url,
-            'data'        => $data,
-        ];
-		return $params;
-	}
-	/**
-	 * @brief TM00015	订单支付成功	IT科技	互联网|电子商务
-	 * @param
-	 * 详细内容：
-		{{first.DATA}}
-		支付金额：{{orderMoneySum.DATA}}
-		商品信息：{{orderProductName.DATA}}
-		{{Remark.DATA}}
-	 */
-	public static function ok($openid,$orderMoneySum = '',$orderProductName = '',$url = '')
-	{
-		$templateId = 'muwysFooMZTtJDLLtyfutxhmnCdYmAqe8D4HlJnpNsw';
-		$data = [
-			'first'	=>	['value' => "我们已收到您的货款，开始为您打包商品，请耐心等待！",'color' => '#0000ff'],
-			'orderMoneySum'	=>	['value' => $orderMoneySum,'color' => '#339933'],
-			'orderProductName' =>	['value' => $orderProductName,'color' => '#339933'],
-			'Remark' =>	['value' => "如有问题请致电0898-65399901或直接在微信留言，小微将第一时间为您服务！",'color' => '#7d7d7d'],
-		];
-		return self::header($openid,$templateId,$data,$url);
-	}
-	/**
-	 * @brief OPENTM407362300	商户注册审核通知	IT科技	互联网|电子商务
-	 * @param
-	 * 详细内容：
-		{{first.DATA}}
-		用户名：{{keyword1.DATA}}
-		手机号：{{keyword2.DATA}}
-		时间：{{keyword3.DATA}}
-		{{remark.DATA}}
-	 */
-	public static function sellerReg($openid,$name = '',$mobile = '',$url = '')
-	{
-		$templateId = 'hFPXzTUgjlh1Qy5vUTQ8O5OCHVE_ZZnPPNiwCqXl2fc';
-		$data = [
-			'first'		=>	['value' => "亲爱的管理员，有商户申请加盟平台，请及时审核！",'color' => '#0000ff'],
-			'keyword1'	=>	['value' => $name,'color' => '#339933'],
-			'keyword2'	=>	['value' => $mobile,'color' => '#339933'],
-			'keyword3'	=>	['value' => date("Y-m-d H:i:s"),'color' => '#339933'],
-			'Remark'	=>	['value' => "如有问题请致电0898-65399901或直接在微信留言！",'color' => '#7d7d7d'],
-		];
-		return self::header($openid,$templateId,$data,$url);
-	}
-
-	//方法不存在
-	public static function __callStatic($funcname, $arguments)
-	{
-		return "";
 	}
 }
