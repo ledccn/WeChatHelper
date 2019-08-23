@@ -15,7 +15,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	private $wchUsersExpire = 86400;
 	/**
 	 * 构造方法，配置应用信息
-	 * @param array 
+	 * @param array
 	 */
 	public function __construct($request, $response, $params = NULL) {
         parent::__construct($request, $response, $params);
@@ -88,7 +88,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 		$uid = $this->getUid($token);
 		//缓存，取用户数据
 		$C = new Typecho_Cache();
-		$userArr = $C->get($uid);		
+		$userArr = $C->get($uid);
 		if(empty($userArr)){
 			//缓存取失败
 			$userArr = $this->select($uid);	//数据库取uid
@@ -101,15 +101,10 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 			} else {
 				//数据库取成功、存缓存（精简数据uid,openid,is_send,status,synctime,token,sendsum）
 				$C->set($uid,$userArr,$this->wchUsersExpire);
-			}			
+			}
 		}
 		//验证token
 		if ($userArr['token'] === $token) {
-			//获取模板消息各项参数：openid,text,desp,url
-			$openid = $userArr['openid'];
-			$text = $this->request->get('text');
-			$desp = $this->request->get('desp');
-			$url = 'https://ledc.cn/';
 			//p($userArr);
 			//is_send值：正常0，临时禁1，永久禁止2;
 			if (empty($userArr['is_send'])) {
@@ -125,33 +120,37 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 			$result['errmsg'] = 'token验证失败';	//成功ok
 			die(Json::encode($result));
 		}
-		//组装模板消息
-		$TemplateMessage = self::ok($openid,$text,$desp,$url);
+		//获取模板消息各项参数：openid,text,desp,url
 		$push['uid'] = $userArr['uid'];
-		$push['data'] = $TemplateMessage;
-		p($push);
-		//redis队列
-		//$redis = new Redis();
-		//$redis->connect('127.0.0.1',6379);
-		//放入redis队列，返回队列总数
-		$redisNum = $C->rpush("wechatTemplateMessage",$push);
-		if (isset($redisNum) && ($redisNum>0)) {
-			$code = 0;
-			$msg = 'ok';
-			//流量监控
-			# code...
-		} else {
+		$push['openid'] = $userArr['openid'];
+		$push['text'] = $this->request->get('text');
+		$push['desp'] = $this->request->get('desp');
+		$push['url'] = 'https://ledc.cn/';
+		$push['template_id']= '';
+		try{
+			$json = Json::encode($push);
+			p($json);
+			//放入redis队列，返回队列总数
+			$redisNum = $C->rpush("wechatTemplateMessage",$json);
+			if (isset($redisNum) && ($redisNum>0)) {
+				$code = 0;
+				$msg = 'ok';
+				//流量监控
+				# code...
+			}
+		}catch(Exception $e){
+			//echo $e->getMessage();
 			$code = -1;
 			$msg = 'server error';
 			//入队异常，发送警报
 			# code...
 		}
-		$result['errcode'] = 0;		//成功是0
+		$result['errcode'] = $code;		//成功是0
 		$result['errmsg'] = $msg;	//成功ok
 		die(Json::encode($result));
 		//p(Utils::sendTemplateMessage($TemplateMessage));
 		//p($this->request->getPathInfo());
-		//p(unserialize(Helper::options()->panelTable));	
+		//p(unserialize(Helper::options()->panelTable));
 	}
 	/**
 	 * @brief 分离token中uid
