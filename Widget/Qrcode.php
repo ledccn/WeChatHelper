@@ -85,9 +85,10 @@ class WeChatHelper_Widget_Qrcode extends Widget_Abstract
 	 */
 	public function qrcode() {
 		try{
-			$QRkey = $this->getQRkey();		
+			$QRkey = $this->getQRkey();
 			$QRCode = Utils::getQRCode($QRkey,0,$this->expire_seconds);
 			if($QRCode){
+				//$QRimg = Utils::getQRUrl($QRCode['ticket']);
 				//认证方法：ticket+QRkey
 				$QRCode['QRkey'] = $QRkey;
 				unset($QRCode['url']);
