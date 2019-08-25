@@ -79,33 +79,36 @@ class WeChatHelper_Widget_Qrcode extends Widget_Abstract
 
 	}
 	/**
-	 * @brief 发送模板消息 https://www.iyuu.cn/IYUU570100T24654654564654.send?text=abc&desp=defg
-	 * 接口发送token算法：IYUU + uid + T + sha1(openid+time+盐) + .send
-	 * 消息提取token算法：sha1(openid+time+盐)
+	 * @brief 生成临时整型QR_SCENE带参数二维码 https://developers.weixin.qq.com/doc/offiaccount/Account_Management/Generating_a_Parametric_QR_Code.html
+	 * 两种认证方式：方法一：ticket+QRkey；方法二：url+QRkey【$urlToken = substr($QRarray['url'],23);】，目前采用第一种！
+	 * 工作流程：QRkey为键，QRCode存入Redis缓存
 	 */
-	public function qrcode() {		
+	public function qrcode() {
 		try{
 			$QRkey = $this->getQRkey();		
 			$QRCode = Utils::getQRCode($QRkey,0,$this->expire_seconds);
-			p($QRCode);
 			if($QRCode){
-				$urlToken = substr($QRCode['url'],23);
-				$this->C->set('qrcode'.$QRkey,$urlToken,$this->expire_seconds);
+				//认证方法：ticket+QRkey
+				$QRCode['QRkey'] = $QRkey;
+				unset($QRCode['url']);
+				$json = json_encode($QRCode);
+				$this->C->set('qrcode'.$QRkey,$json,$this->expire_seconds);
+				echo $json;
 				return;
 			}
-			$code = 0;
-			$msg = 'ok';
+			$code = -1;
+			$msg = 'server error';
 		}catch(Exception $e){
 			$code = -1;
 			$msg = $e->getMessage();
 		}
-		$result['errcode'] = $code;		//成功是0
-		$result['errmsg'] = $msg;	//成功ok
+		$result['errcode'] = $code;
+		$result['errmsg'] = $msg;
 		die(Json::encode($result));
 	}
 	/**
-	 * @brief 获取带参数二维码的场景值ID
-	 * @return string 带参数二维码的场景值ID
+	 * @brief 获取唯一带参数二维码的场景值ID
+	 * @return string 唯一场景值ID
 	 */
 	public function getQRkey(){
 		$QRkey = rand(1,4294967200);
