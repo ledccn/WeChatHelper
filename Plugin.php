@@ -24,6 +24,8 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
         Helper::addRoute('wechat', '/wechat', 'WeChatHelper_Action', 'link');
         //模板消息发送接口
         Helper::addRoute('send', '/[send:alpha].send', 'WeChatHelper_Widget_Send', 'send');
+		//带参数二维码接口
+        Helper::addRoute('qrcode', '/qrcode', 'WeChatHelper_Widget_Qrcode', 'qrcode');
         //后台管理接口
         Helper::addAction('WeChat', 'WeChatHelper_Action');
         //后台菜单
@@ -54,6 +56,7 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
         }
         Helper::removeRoute('wechat');
         Helper::removeRoute('send');
+		Helper::removeRoute('qrcode');
         Helper::removeAction('WeChat');
         $index = Helper::removeMenu('微信助手');
         Helper::removePanel($index, 'WeChatHelper/Page/Users.php');
