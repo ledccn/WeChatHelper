@@ -86,6 +86,11 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 		$token = substr(trim($this->request->getPathInfo(),'/'),0,-5);
 		//分离用户ID
 		$uid = $this->getUid($token);
+		if(empty($uid)){
+			$result['errcode'] = 404;
+			$result['errmsg'] = 'token验证失败。';
+			die(Json::encode($result));
+		}
 		//缓存，取用户数据
 		$C = new Typecho_Cache();
 		$userArr = $C->get($uid);
@@ -99,7 +104,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 				$result['errmsg'] = 'token验证失败';		//请求成功ok success
 				die(Json::encode($result));
 			} else {
-				//数据库取成功、存缓存（精简数据uid,openid,is_send,status,synctime,token,sendsum）
+				//数据库取成功、存缓存
 				$C->set($uid,$userArr,$this->wchUsersExpire);
 			}
 		}
@@ -161,7 +166,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	 * @param string $token		用户请求token
 	 */
 	public function getUid($token){
-		//验证是否iyuu开头，strpos($token,'T')>16,token总长度小于40+10+5
-		return substr($token,4,strpos($token,'T')-4);
+		//验证是否IYUU开头，strpos($token,'T')<15,token总长度小于60(40+10+5)
+		return (strlen($token)<60)&&(strpos($token,'IYUU')===0)&&(strpos($token,'T')<15) ? substr($token,4,strpos($token,'T')-4): false;
 	}
 }
