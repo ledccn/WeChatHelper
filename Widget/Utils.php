@@ -3,8 +3,11 @@ class Utils {
     const MENU_CREATE_URL = 'https://api.weixin.qq.com/cgi-bin/menu/create';
     const MENU_REMOVE_URL = 'https://api.weixin.qq.com/cgi-bin/menu/delete';
     const API_URL_PREFIX = 'https://api.weixin.qq.com/cgi-bin';
-    const AUTH_URL = '/token';
-    const TEMPLATE_SEND_URL = '/message/template/send?access_token=';
+    const AUTH_URL = '/token';		//请求access_token
+	const TEMPLATE_SEND_URL = '/message/template/send?access_token=';	//模板消息发送
+	const QRCODE_CREATE_URL='/qrcode/create?';	//生成带参数二维码
+	const QRCODE_IMG_URL='https://mp.weixin.qq.com/cgi-bin/showqrcode?ticket=';	//通过ticket换取二维码链接
+	const SHORT_URL='/shorturl?';	//长链接转短链接接口
     private static $options;
 	private static $access_token;
 	private static $expires_in;
@@ -105,6 +108,103 @@ class Utils {
 		}
 		return false;
     }
+	/**
+	 * 创建二维码ticket
+	 * @param int|string $scene_id 自定义追踪id,临时二维码只能用数值型
+	 * @param int $type 0:临时整形二维码；1:临时字符串形二维码；2:永久整形二维码(此时expire参数无效)；3:永久字符串型二维码(此时expire参数无效)
+	 * @param int $expire 临时二维码有效期，最大2592000（即30天）
+	 * @return array('ticket'=>'qrcode字串','expire_seconds'=>604800,'url'=>'二维码图片解析后的地址')
+	 */
+	public static function getQRCode($scene_id='',$type=0,$expire=120){
+		if(!self::getAccessToken()) return false;
+		if (empty($scene_id)) return false;
+		switch ((string)$type) {
+			case '0':
+				if (!is_numeric($scene_id))
+					return false;	//场景值ID，临时二维码时为32位非0整型
+				$action_name = 'QR_SCENE';
+				$action_info = array('scene'=>(array('scene_id'=>$scene_id)));
+				break;
+			case '1':
+				if (!is_string($scene_id))
+					return false;	//场景值ID（字符串形式的ID），字符串类型，长度限制为1到64
+				$action_name = 'QR_STR_SCENE';
+				$action_info = array('scene'=>(array('scene_str'=>$scene_id)));
+				break;
+			case '2':
+				if (!is_numeric($scene_id))
+					return false;	//永久二维码时最大值为100000（目前参数只支持1--100000）
+				$action_name = 'QR_LIMIT_SCENE';
+				$action_info = array('scene'=>(array('scene_id'=>$scene_id)));
+				break;
+			case '3':
+				if (!is_string($scene_id))
+					return false;	//场景值ID（字符串形式的ID），字符串类型，长度限制为1到64
+				$action_name = 'QR_LIMIT_STR_SCENE';
+				$action_info = array('scene'=>(array('scene_str'=>$scene_id)));
+				break;
+
+			default:
+				return false;
+		}
+
+		$data = array(
+			'action_name'    => $action_name,
+			'expire_seconds' => $expire,
+			'action_info'    => $action_info
+		);
+		if ($type > 1) {
+			unset($data['expire_seconds']);
+		}
+		$client = Typecho_Http_Client::get();
+		$result = $client->setData(self::json_encode($data))->send(self::API_URL_PREFIX.self::QRCODE_CREATE_URL.'access_token='.self::$access_token);
+		if ($result) {
+			$json = json_decode($result,true);
+			if (!$json || !empty($json['errcode'])) {
+				//$this->errCode = $json['errcode'];
+				//$this->errMsg = $json['errmsg'];
+				return false;
+			}
+			return $json;
+		}
+		return false;
+	}
+
+	/**
+	 * 获取二维码图片
+	 * @param string $ticket 传入由getQRCode方法生成的ticket参数
+	 * @return string url 返回http地址
+	 */
+	public static function getQRUrl($ticket) {
+		return self::QRCODE_IMG_URL.urlencode($ticket);
+	}
+
+	/**
+	 * 长链接转短链接接口
+	 * @param string $long_url 传入要转换的长url
+	 * @return boolean|string url 成功则返回转换后的短url
+	 */
+	public static function getShortUrl($long_url){
+		if(!self::getAccessToken()) return false;
+		if (empty($long_url)) return false;
+	    $data = array(
+            'action'=>'long2short',
+            'long_url'=>$long_url
+		);
+		$client = Typecho_Http_Client::get();
+		$result = $client->setData(self::json_encode($data))->send(self::API_URL_PREFIX.self::SHORT_URL.'access_token='.self::$access_token);
+	    if ($result)
+	    {
+	        $json = json_decode($result,true);
+	        if (!$json || !empty($json['errcode'])) {
+	            //$this->errCode = $json['errcode'];
+	            //$this->errMsg = $json['errmsg'];
+	            return false;
+	        }
+	        return $json['short_url'];
+	    }
+	    return false;
+	}
     /**
 	 * 微信api不支持中文转义的json结构
 	 * @param array $arr
