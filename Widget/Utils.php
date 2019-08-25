@@ -8,7 +8,12 @@ class Utils {
     private static $options;
 	private static $access_token;
 	private static $expires_in;
-    public static function getAccessToken(){
+	/**
+     * 获取access_token，从机只能从redis获取
+	 * @param bool $master	是否主机的标志，只有主机能从微信获取token刷新redis缓存，从机只能读redis缓存！！！否则会造成模板发送进程执行错误！！！
+     * @return NULL | string
+     */
+    public static function getAccessToken($master = false){
 		//取redis缓存
 		$C = new Typecho_Cache();
 		self::$access_token = $C->get('WCH_access_token');
@@ -18,6 +23,10 @@ class Utils {
 		if (self::valid_access_token()) {
 			return self::$access_token;
 		}else{
+			//access_token只能从redis获取
+			if(!$master){
+				return NULL;
+			}
 			self::$options = Helper::options()->plugin('WeChatHelper');
 			if(isset(self::$options->WCH_appid) && isset(self::$options->WCH_appsecret)){
 				$client = Typecho_Http_Client::get();
