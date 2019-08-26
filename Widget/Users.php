@@ -112,7 +112,6 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
      * 关注事件
      */
     public function subscribe($postObj){
-        //$user = $this->db->fetchRow($this->select()->where('openid = ?', $postObj->FromUserName)->limit(1));
         $accessToken = Utils::getAccessToken();
         if (!$this->openIdExists((String) $postObj->FromUserName)) {
             if($accessToken){
@@ -141,7 +140,68 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
             $user['uid'] = $this->update($user, $this->db->sql()->where('openid = ?', (String) $postObj->FromUserName));
         }
     }
-
+    //带参数二维码场景值ID解析
+    public function qrcode($postObj, $EventKey=''){
+        $redis = new Typecho_Cache();
+        $fromUsername = $postObj->FromUserName;
+        $toUsername = $postObj->ToUserName;
+        $time = time();
+        $data = $redis->get('qrcode'.$EventKey);
+        $data = json_decode($data,true);
+        //$redis->delete('qrcode'.$EventKey);
+        if(empty($EventKey) || empty($data)){
+            return '场景值ID获取失败，请重新扫码！';
+        }
+        //二维码来源及指令解析        
+        if(isset($data['cmd'])){
+            switch ($data['cmd']) {
+                case 'login':
+                    # code...
+                    break;
+                case 'scan':
+                    # code...
+                    break;
+                default:
+                    # code...
+                    break;
+            }
+        }else{
+            //查询openid是否存在
+            $user = $this->openIdExists($fromUsername);
+            if (empty($user)) {
+                //新用户
+                # code...
+            } else {
+                if (isset($user['token']) && $user['token']) {
+                    //token存在
+                    $contentStr = "您原来设置的token是："."\r\n".$user['token'];
+                } else {
+                    //生成新token
+                    $newToken['token'] = 'IYUU'.$user['uid'].'T'.sha1($fromUsername.$time.rand(1000000,9999999));
+                    $newToken['uid'] = $this->update($newToken, $this->db->sql()->where('openid = ?', (String)$fromUsername));
+                    $user['token'] = $newToken['token'];
+                    $contentStr = "获取消息发送token成功："."\r\n".$user['token'];
+                }
+                $data['token'] = $user['token'];
+                $this->sendMessageByUid($EventKey, $data);
+                return $contentStr;
+            }            
+        }
+    }
+    // 针对uid推送数据
+    // 推送的数据，包含uid字段，表示是给这个uid推送
+    public function sendMessageByUid($uid, $message)
+    {
+        // 建立socket连接到内部推送端口
+        $client = stream_socket_client('tcp://127.0.0.1:5678', $errno, $errmsg);
+        if(!$client) return "ERROR: $errno - $errmsg";
+        // 发送数据，注意5678端口是Text协议的端口，Text协议需要在数据末尾加上换行符
+        fwrite($client, json_encode($message)."\n");
+        // 读取推送结果
+        //$ret = fread($client, 8192);
+        fclose($client);      
+        return 'ok';
+    }
     /**
      * 判断OpenId是否存在
      */
