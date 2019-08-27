@@ -82,7 +82,7 @@ class WeChatHelper_Widget_Send extends Widget_Abstract
 	 */
 	public function send() {
 		$result = array();
-		//取请求token：/IYUU570100T24654654564654.send
+		//取请求token：/IYUU1T93951a87f774303da72b37b39cfef2a4f12f86a4.send
 		$token = substr(trim($this->request->getPathInfo(),'/'),0,-5);
 		//分离用户ID
 		$uid = $this->getUid($token);
