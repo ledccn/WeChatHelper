@@ -186,7 +186,7 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
         $form->addInput($appsecret);
 
         //禁用插件是否删除数据
-        $dropTable = new Typecho_Widget_Helper_Form_Element_Radio('dropTable',array('1' => _t('开启'), '0' => _t('关闭')),1,
+        $dropTable = new Typecho_Widget_Helper_Form_Element_Radio('dropTable',array('1' => _t('开启'), '0' => _t('关闭')),0,
             _t('<span style="color:#B94A48">数据删除</span>'), _t('<span style="color:#B94A48">开启后，禁用插件会删除插件设置数据和数据表。</span>'));
         $form->addInput($dropTable);
     }
