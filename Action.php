@@ -299,7 +299,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             ->limit($ArticleCount);
             $result = $this->db->fetchAll($sql);
             #redis存
-            $this->redis->set('wechat_newpost'.$ArticleCount,$result,7200);
+            $this->redis->set('wechat_newpost'.$ArticleCount,$result,21600);
         }
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
@@ -318,7 +318,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
             ->order('RAND()');
             $result =  $this->db->fetchAll($sql);
             #redis存
-            $this->redis->set('wechat_randomPost'.rand(1,10),$result,7200);
+            $this->redis->set('wechat_randomPost'.rand(1,10),$result,21600);
         }
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
@@ -354,7 +354,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         if (empty($result)){
             $result =  $this->db->fetchAll($sql);
             #redis存
-            $this->redis->set('wechat_searchPost'.$hash,$result,300);
+            $this->redis->set('wechat_searchPost'.$hash,$result,3600);
         }
         $resultStr = $this->sqlData($postObj, $result);
         return $resultStr;
