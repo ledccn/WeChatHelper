@@ -124,16 +124,16 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                 $db->query("CREATE TABLE IF NOT EXISTS " . $db->getPrefix() . 'wch_template_message' . " (
                     `mid` int(16) NOT NULL AUTO_INCREMENT COMMENT '自增主键',
                     `uid` int(10) NOT NULL COMMENT '关联wch_users表',
-                    `MsgId` int(20) DEFAULT NULL COMMENT '第三方消息id',
+                    `msgid` varchar(30) DEFAULT NULL COMMENT '第三方消息id',
                     `message` text NOT NULL COMMENT '消息体',
-                    `hash` varchar(50) NOT NULL COMMENT '消息读取sha1(openid+time+盐)',
+                    `hash` varchar(60) NOT NULL COMMENT '消息读取sha1(openid+time+盐)',
                     `status` tinyint(1) NOT NULL DEFAULT '0' COMMENT '消息投递状态',
                     `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                     PRIMARY KEY (`mid`),
                     UNIQUE KEY `hash` (`hash`),
-                    UNIQUE KEY `MsgId` (`MsgId`),
+                    UNIQUE KEY `MsgId` (`msgid`),
                     KEY `uid` (`uid`)
-                  ) ENGINE=MyISAM DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
+                    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
             } else {
                 throw new Typecho_Plugin_Exception(_t('对不起, 本插件仅支持MySQL数据库。'));
             }
