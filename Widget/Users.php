@@ -117,9 +117,18 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
             if($accessToken){
                 $result = $this->apiGetUser((String) $postObj->FromUserName, $accessToken);
                 $result = json_decode($result);
-                $user = (array) $result;
+                $user['openid'] = $result->openid;
+                $user['nickname'] = $result->nickname;
+                $user['sex'] = $result->sex;
+                $user['language'] = $result->language;
+                $user['city'] = $result->city;
+                $user['province'] = $result->province;
+                $user['country'] = $result->country;
+                $user['headimgurl'] = $result->headimgurl;
+                $user['subscribe_time'] = $result->subscribe_time;
+                $user['synctime'] = time();
                 $user['created'] = time();
-                unset($user['subscribe']); 
+                $user['status'] = '1';
             }else{
                 $user = array('openid' => $postObj->FromUserName, 'subscribe_time' => time(), 'created' => time());
             }

@@ -87,7 +87,7 @@ class WeChatHelper_Plugin implements Typecho_Plugin_Interface
                   ) ENGINE=MyISAM  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1");
                 //插入默认菜单数据
                 $db->query("INSERT INTO `" . $db->getPrefix() . 'wch_menus' . "` (`mid`, `level`, `name`, `type`, `value`, `sort`, `order`, `parent`, `created`) VALUES
-                    (1, 'button', '首页', 'click', 'https://www.iyuu.cn', 10, 1, 0, 1566383054),
+                    (1, 'button', '首页', 'view', 'https://www.iyuu.cn', 10, 1, 0, 1566383054),
                     (2, 'button', '最新文章', 'click', 'n', 20, 2, 0, 1566383095),
                     (3, 'button', '功能', 'click', NULL, 30, 3, 0, 1566383145),
                     (4, 'sub_button', '随机文章', 'click', 'r', 31, 1, 3, 1566383166),
