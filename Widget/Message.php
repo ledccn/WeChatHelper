@@ -137,7 +137,7 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
 		//获取模板消息各项参数：openid,text,desp,url
 		$push['uid'] = $userArr['uid'];
 		$push['openid'] = $userArr['openid'];
-		$push['url'] = 'https://www.iyuu.cn';
+		$push['url'] = 'https://www.iyuu.cn/read?hash=';
 		$push['template_id']= '';
 		$push['text'] = $this->request->get('text');
 		$push['desp'] = $this->request->get('desp');
