@@ -76,16 +76,24 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
 
 	}
 	/**
+     * 查询方法
+     *
+     * @access public
+     * @return Typecho_Db_Query
+     */
+    public function selectMessage($hash = ''){
+		return $this->db->fetchRow($this->db->select('uid','msgid','message','created')->from('table.wch_template_message')->where('hash = ?', $hash)->limit(1));
+	}
+	/**
 	 * @brief 发送模板消息 https://www.iyuu.cn/IYUU570100T24654654564654.send?text=abc&desp=defg
 	 * 接口发送token算法：IYUU + uid + T + sha1(openid+time+盐) + .send
-	 * 消息提取token算法：sha1(openid+time+盐)
 	 */
 	public function send() {
 		$result = array();
 		//取请求token：/IYUU1T93951a87f774303da72b37b39cfef2a4f12f86a4.send
 		$token = substr(trim($this->request->getPathInfo(),'/'),0,-5);
 		//分离用户ID
-		$uid = $this->getUid($token);
+		$uid = Utils::getUid($token);
 		if(empty($uid)){
 			$result['errcode'] = 404;
 			$result['errmsg'] = 'token验证失败。';
@@ -161,12 +169,34 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
 		//p(unserialize(Helper::options()->panelTable));
 	}
 	/**
-	 * @brief 分离token中uid
-	 * 接口发送token算法：IYUU + uid + T + sha1(openid+time+盐)
-	 * @param string $token		用户请求token
+	 * @brief 微信模板消息读取接口
+	 * 消息提取token算法：IYUU + uid + T + sha1(openid+time+盐)
+	 * @param string $hash 消息提取凭证 GET请求携带的参数
 	 */
-	public function getUid($token){
-		//验证是否IYUU开头，strpos($token,'T')<15,token总长度小于60(40+10+5)
-		return (strlen($token)<60)&&(strpos($token,'IYUU')===0)&&(strpos($token,'T')<15) ? substr($token,4,strpos($token,'T')-4): false;
+	public function read(){
+		//消息提取凭证
+		$hash = $this->request->get('hash');
+		if (empty($hash)) return;
+
+		//缓存，取消息
+		$C = new Typecho_Cache();
+		$message = $C->get('message'.$hash);
+		if(empty($message)){
+			//缓存取失败
+			$message = $this->selectMessage($hash);	//数据库取消息
+			if (empty($message)) {
+				//数据库取失败
+				//加入流控：同IP 1分钟失败10次，IP封禁30分钟；同用户 1分钟失败30次，IP封禁30分钟；
+				$result['errcode'] = 404;
+				$result['errmsg'] = 'token验证失败';
+				die(Json::encode($result));
+			} else {
+				$json = $message['message'];
+				$message['message'] = json_decode($json,true);
+				//数据库取成功、存缓存
+				$C->set('message'.$hash, $message, 3600);
+			}
+		}
+		p($message);
 	}
 }

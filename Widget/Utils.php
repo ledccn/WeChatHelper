@@ -253,5 +253,39 @@ class Utils {
 			return '[' . $json . ']'; //Return numerical JSON
 		return '{' . $json . '}'; //Return associative JSON
 	}
-
+	/**
+	 * @brief 分离token中的用户uid
+	 * token算法：IYUU + uid + T + sha1(openid+time+盐)
+	 * @param string $token		用户请求token
+	 */
+	public static function getUid($token){
+		//验证是否IYUU开头，strpos($token,'T')<15,token总长度小于60(40+10+5)
+		return (strlen($token)<60)&&(strpos($token,'IYUU')===0)&&(strpos($token,'T')<15) ? substr($token,4,strpos($token,'T')-4): false;
+	}
+	/**
+     * 生成消息发送token和消息提取token
+     * 算法：IYUU + uid + T + sha1(openid+time+盐)
+     * @access public
+     * @param string $uid 用户uid
+     * @param string $openid 微信用户唯一
+     * @return string
+     */
+    public static function getToken($uid='', $openid=''){
+		$str = self::createNoncestr(32);
+        return 'IYUU'.$uid.'T'.sha1($str.$openid.time());
+    }
+	/**
+     * 产生随机字符串
+     * @param int $length 指定字符长度
+     * @param string $str 字符串前缀
+     * @return string
+     */
+    public static function createNoncestr($length = 32, $str = "")
+    {
+        $chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+        for ($i = 0; $i < $length; $i++) {
+            $str .= substr($chars, mt_rand(0, strlen($chars) - 1), 1);
+        }
+        return $str;
+    }
 }
