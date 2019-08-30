@@ -116,12 +116,13 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                         }else{
                             // 普通关注
                             $resultStr = $this->baseText($postObj, $options->welcome);
-                        }                        
+                        }
                         break;
                     case 'unsubscribe'			:   //取消订阅事件
                         Typecho_Widget::widget('WeChatHelper_Widget_Users')->unsubscribe($postObj);
                         break;
                     case 'scan'					:   //扫描带参数二维码事件(用户已关注)
+						Typecho_Widget::widget('WeChatHelper_Widget_Users')->subscribe($postObj);
                         $EventKey = $postObj->EventKey;// 事件KEY值，是一个32位无符号整数，即创建二维码时的二维码scene_id
                         $Ticket   = $postObj->Ticket;  //二维码的ticket
                         $contentStr = Typecho_Widget::widget('WeChatHelper_Widget_Users')->qrcode($postObj, $EventKey);
@@ -387,7 +388,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 							$tmpPicUrl = $this->_imageDefault;
 						}
 					}
-                }                
+                }
 				//$tmpPicUrl = $tmpPicUrl."?imageView2/1/w/300";        //图片API
                 $resultStr .= sprintf($this->_itemTpl, $val['title'], $content, $tmpPicUrl, $val['permalink']);
                 $num++;
