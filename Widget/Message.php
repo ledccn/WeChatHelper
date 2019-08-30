@@ -9,7 +9,7 @@
  * @link https://www.iyuu.cn
  */
 include_once 'Utils.php';
-class WeChatHelper_Widget_Send extends Widget_Abstract
+class WeChatHelper_Widget_Message extends Widget_Abstract
 {
 	//缓存时间设置，默认1天
 	private $wchUsersExpire = 86400;

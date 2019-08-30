@@ -9,7 +9,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 {
     private $db;
     private $redis;
-    private $_debug = true;         //调试开关true false，记录微信发来的所有数据
+    private $_debug = false;         //调试开关true false，记录微信发来的所有数据
     private $_debugResult = false;   //调试开关true false，记录本接口返回的数据
     private $_WeChatHelper;
     private $_textTpl;
