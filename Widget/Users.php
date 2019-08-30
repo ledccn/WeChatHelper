@@ -186,7 +186,7 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
                     $contentStr = "您原来设置的token是："."\r\n".$user['token'];
                 } else {
                     //生成新token
-                    $newToken['token'] = $this->getToken($user['uid'], $fromUsername);
+                    $newToken['token'] = Utils::getToken($user['uid'], $fromUsername);
                     $newToken['uid'] = $this->update($newToken, $this->db->sql()->where('openid = ?', (String)$fromUsername));
                     $user['token'] = $newToken['token'];
                     $contentStr = "申请消息发送token成功："."\r\n".$user['token'];
@@ -196,17 +196,6 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
                 return $contentStr;
             }            
         }
-    }
-    /**
-     * 生成消息发送token
-     * 算法：IYUU + uid + T + sha1(openid+time+盐)
-     * @access public
-     * @param string $uid 用户uid
-     * @param string $openid 微信用户唯一
-     * @return string
-     */
-    public function getToken($uid='', $openid=''){
-        return 'IYUU'.$uid.'T'.sha1($openid.time().rand(1000000,9999999));
     }
     /**
      * 针对uid推送数据

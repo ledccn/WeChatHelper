@@ -272,7 +272,7 @@ class Utils {
      */
     public static function getToken($uid='', $openid=''){
 		$str = self::createNoncestr(32);
-        return 'IYUU'.$uid.'T'.sha1($str.$openid.time());
+        return 'IYUU'.$uid.'T'.sha1($str.$openid.microtime(true));
     }
 	/**
      * 产生随机字符串
