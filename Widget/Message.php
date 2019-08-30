@@ -172,6 +172,20 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
 	 * @brief 微信模板消息读取接口
 	 * 消息提取token算法：IYUU + uid + T + sha1(openid+time+盐)
 	 * @param string $hash 消息提取凭证 GET请求携带的参数
+	 * 缓存内的消息结构：
+	   Array
+		(
+			[uid] => 3
+			[msgid] => 965377193167781890
+			[message] => Array
+				(
+					[url] => https://www.iyuu.cn
+					[text] => 有人在您的博客发表了评论
+					[desp] => **lingguang** 在 [「简单美化了一下w」](https://www.38blog.com/index.php/archives/61.html "简单美化了一下w") 中说到:
+
+					> test
+				)
+		)
 	 */
 	public function read(){
 		//消息提取凭证
@@ -197,6 +211,66 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
 				$C->set('message'.$hash, $message, 3600);
 			}
 		}
-		p($message);
+
+		$html = '<h1>'.$message['message']['text'].'</h1>';
+		$desp = $message['message']['desp'];
+		$html.= Markdown::convert($desp);
+		$header = <<<html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>查看消息 - 爱语飞飞</title>
+<style>
+p{font-size:15px; line-height:28px; color:#595959;font-family:微软雅黑}
+pre, code{font-size:14px;  font-family: Roboto, 'Courier New', Consolas, Inconsolata, Courier, monospace;}
+code{margin:0 3px;  padding:0 6px;  white-space: pre-wrap;  background-color:#F8F8F8;  border-radius:2px;  display: inline;}
+pre{font-size:15px;  line-height:20px;}
+precode{white-space: pre; overflow:auto; border-radius:3px; padding:5px10px; display: block !important;}
+strong, b{color:#BF360C;}
+em, i{color:#009688;}
+big{font-size:22px;  color:#009688;  font-weight: bold;  vertical-align: middle;  border-bottom:1px solid #eee;}
+small{font-size:12px;  line-height:22px;}
+hr{border-bottom:0.05em dotted #eee;  margin:10px auto;}
+p{margin:15px 5px!important;}
+table, pre, dl, blockquote, q, ul, ol{margin:10px 5px;}
+ul, ol{padding-left:10px;}
+li{margin:5px;}
+lip{margin:5px 0!important;}
+ulul, ulol, olul, olol{margin:0;  padding-left:10px;}
+olol, ulol{list-style-type: lower-roman;}
+ululol, ulolol, olulol, ololol{list-style-type: lower-alpha;}
+dl{padding:0;}
+dldt{font-size:1em;  font-weight: bold;  font-style: italic;}
+dldd{margin:0 0 10px;  padding:0 10px;}
+blockquote, q{border-left:3px solid #009688;  padding:0 10px;  color:#777;  quotes: none;}
+blockquote::before, blockquote::after, q::before, q::after{content: none;}
+h1, h2, h3, h4, h5, h6{margin:20px 0 10px;  padding:0;  font-weight: bold;  color:#009688;}
+h1{font-size:24px;  border-bottom:1px solid #ddd;}
+h2{font-size:22px;  border-bottom:1px solid #eee;}
+h3{font-size:18px; text-align: center;}
+h4{font-size:18px;}
+h5{font-size:16px;}
+h6{font-size:16px; color:#777;}
+table{padding:0;  border-collapse: collapse;  border-spacing:0;  font-size:1em;  font: inherit;  border:0;}
+tbody{margin:0;  padding:0;  border:0;}
+tabletr{border:0;  border-top:1px solid #CCC;  background-color: white;  margin:0;  padding:0;}
+tabletr:nth-child(2n){background-color:#F8F8F8;}
+tabletrth, tabletrtd{font-size:16px;  border:1px solid #CCC;  margin:0;  padding:5px10px;}
+tabletrth{font-weight: bold;  background-color:#F0F0F0;}
+</style>
+</head>
+<body>
+<div class="markdown-here-wrapper">
+html;
+
+		$footer = <<<html
+</div>
+</body>
+</html>
+html;
+		echo $header.$html.$footer;
+		//p($message);
 	}
 }
