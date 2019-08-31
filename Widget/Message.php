@@ -1,7 +1,5 @@
 <?php
 /**
- * @copyright (c) 2014-2019
- * @file send.php
  * @brief 微信模板消息
  * @author 大卫科技Blog
  * @date 2019年8月22日

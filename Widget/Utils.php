@@ -1,4 +1,11 @@
 <?php
+/**
+ * @brief 微信工具类
+ * @author 大卫科技Blog
+ * @date 2019年8月22日
+ * @version 1.0
+ * @link https://www.iyuu.cn
+ */
 class Utils {
     const MENU_CREATE_URL = 'https://api.weixin.qq.com/cgi-bin/menu/create';
     const MENU_REMOVE_URL = 'https://api.weixin.qq.com/cgi-bin/menu/delete';

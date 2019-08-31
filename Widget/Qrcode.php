@@ -1,6 +1,5 @@
 <?php
 /**
- * @copyright (c) 2014-2019
  * @file Qrcode.php
  * @brief 微信带参数二维码
  * @author 大卫科技Blog
