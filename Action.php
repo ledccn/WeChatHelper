@@ -154,6 +154,17 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                             case 'r':   //随机文章
                                 $resultStr = $this->randomPost($postObj);
                                 break;
+                            case 'is_send': //取消通知
+                                $str = <<<EOF
+请输入数字指令：
+「91」临时取消 （24小时自动恢复接收）
+「92」停止通知
+「93」开启通知
+
+说明：20秒内指令有效，超时后需重新点击菜单触发指令。
+EOF;
+                                $resultStr = $this->baseText($postObj,$str);
+                                break;
                             default:
                                 # code...
                                 break;
@@ -164,10 +175,10 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                     case 'scancode_push'		:   //自定义菜单事件（扫码推事件的事件推送）
                         break;
                     case 'scancode_waitmsg'		:   //自定义菜单事件（扫码推事件且弹出“消息接收中”提示框的事件推送）
+                        //扫码类型 ScanType                        
                         $ScanType = $postObj->ScanCodeInfo->ScanType;
-                        $ScanResult = $postObj->ScanCodeInfo->ScanResult;
-                        //扫码类型 ScanType
                         //扫码结果 ScanResult
+                        $ScanResult = $postObj->ScanCodeInfo->ScanResult;
                         switch($ScanType){
                             case 'qrcode':	//二维码
                                 $resultStr = $this->baseText($postObj, $ScanResult);

@@ -92,7 +92,7 @@ class WeChatHelper_Widget_Qrcode extends Widget_Abstract
 				$QRCode['uid'] = $QRkey;
 				unset($QRCode['url']);
 				$json = json_encode($QRCode);
-				$this->C->set('qrcode'.$QRkey,$json,$this->expire_seconds);
+				$this->C->set('qrcode'.$QRkey,$QRCode,$this->expire_seconds);
 				echo $json;
 				return;
 			}

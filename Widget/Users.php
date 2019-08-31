@@ -156,7 +156,6 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
         $toUsername = $postObj->ToUserName;
         $time = time();
         $data = $redis->get('qrcode'.$EventKey);
-        $data = json_decode($data,true);
         //$redis->delete('qrcode'.$EventKey);
         if(empty($EventKey) || empty($data)){
             return '场景值ID获取失败，请重新扫码！';
