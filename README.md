@@ -1,19 +1,22 @@
 # WeChatHelper
-一款基于Typecho的微信助手插件（修改版）
+一款基于Typecho的微信助手插件（修改版），本插件依赖Redis缓存。
 
 
 ## 插件功能 ##
 
- - 自定义菜单功能
- - 最新博客文章列表
- - 随机博客文章列表
+ - 自定义菜单（技术栈：缓存）
+ - 关注者列表
+ - 模板消息（技术栈：队列、缓存、守护进程）
+ - 带参数二维码（技术栈：缓存）
+ - 最新博客文章
+ - 随机博客文章
  - 搜索博客文章
 
 ## 使用方法 ##
 
  1. 下载插件
 
-   直接下载解压，或者在/typecho/usr/plugins目录下git clone https://gitee.com/ledc/WeChatHelper.git
+​       直接下载解压，或者在/typecho/usr/plugins目录下git clone https://gitee.com/ledc/WeChatHelper.git
 
  2. 登陆Typecho后台，在“控制台”下拉菜单中进入“插件管理”，启用插件。
 
@@ -31,3 +34,4 @@
 添加微信号iyuucn查看效果。
 
 ![qrcode_for_gh_dd7c6f27ae9a_258](https://www.iyuu.cn/usr/uploads/qrcode/qrcode_iyuucn_258.jpg)
+
