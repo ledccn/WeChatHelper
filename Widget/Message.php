@@ -189,7 +189,13 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
 		//消息提取凭证
 		$hash = $this->request->get('hash');
 		if (empty($hash)) return;
-
+		//分离用户ID
+		$uid = Utils::getUid($hash);
+		if(empty($uid)){
+			$result['errcode'] = 404;
+			$result['errmsg'] = 'token验证失败。';
+			die(Json::encode($result));
+		}
 		//缓存，取消息
 		$C = new Typecho_Cache();
 		$message = $C->get('message'.$hash);
