@@ -227,6 +227,7 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 <title>查看消息 - 爱语飞飞</title>
 <style>
+.markdown-here-wrapper{word-wrap:break-word;}
 p{font-size:15px; line-height:28px; color:#595959;font-family:微软雅黑}
 pre, code{font-size:14px;  font-family: Roboto, 'Courier New', Consolas, Inconsolata, Courier, monospace;}
 code{margin:0 3px;  padding:0 6px;  white-space: pre-wrap;  background-color:#F8F8F8;  border-radius:2px;  display: inline;}
