@@ -92,9 +92,9 @@ class WeChatHelper_Widget_Qrcode extends Widget_Abstract
             if ($QRCode) {
                 //认证方法：ticket+QRkey
                 $QRCode['uid'] = $QRkey;
-                unset($QRCode['url']);
-                $json = json_encode($QRCode);
+                unset($QRCode['url']);                
                 $this->C->set('qrcode'.$QRkey, $QRCode, $this->expire_seconds);
+                $json = json_encode($QRCode);
                 echo $json;
                 return;
             }
@@ -118,7 +118,7 @@ class WeChatHelper_Widget_Qrcode extends Widget_Abstract
         if ($this->C->get('qrcode'.$QRkey)) {
             $this->getQRkey();
         }
-        $this->C->set('qrcode'.$QRkey, 'iyuu.cn', 120);
+        $this->C->set('qrcode'.$QRkey, 'iyuu.cn/qrcode', 120);
         return $QRkey;
     }
 }

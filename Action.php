@@ -157,17 +157,10 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                                 $resultStr = $this->randomPost($postObj);
                                 break;
                             case 'is_send': //取消通知
-                                $str = <<<EOF
-请输入数字指令：
-「91」临时取消 （24小时自动恢复接收）
-「92」停止通知
-「93」开启通知
-
-说明：20秒内指令有效，超时后需重新点击菜单触发指令。
-EOF;
+                                $str = $this->CmdContent('is_send', $fromUsername);
                                 $resultStr = $this->baseText($postObj, $str);
                                 break;
-                            default:
+                            default:                                
                                 # code...
                                 break;
                         }
@@ -209,19 +202,25 @@ EOF;
                 switch ($msgType) {
                     case 'text':   //文本信息
                         $keyword = trim($postObj->Content);
-                        $cmd = strtolower(substr($keyword, 0, 1));  //转小写
-                        switch ($cmd) {
-                            case 'h':
-                                $contentStr = "s 关键词 搜索日志\n ";
-                                $resultStr = $this->baseText($postObj, $contentStr);
-                                break;
-                            case 's':   //搜索
-                                $searchParam = substr($keyword, 1);
-                                $resultStr = $this->searchPost($postObj, $searchParam);
-                                break;
-                            default:    //未匹配
-                                $resultStr = $this->baseText($postObj);
-                                break;
+                        // 上下文指令匹配                        
+                        $ret = $this->CmdContent($keyword, $fromUsername, false);
+                        if (is_string($ret)) {
+                            $resultStr = $this->baseText($postObj, $ret);
+                        } else {
+                            $cmd = strtolower(substr($keyword, 0, 1));  //转小写
+                            switch ($cmd) {
+                                case 'h':
+                                    $contentStr = "s 关键词 搜索日志\n ";
+                                    $resultStr = $this->baseText($postObj, $contentStr);
+                                    break;
+                                case 's':   //搜索
+                                    $searchParam = substr($keyword, 1);
+                                    $resultStr = $this->searchPost($postObj, $searchParam);
+                                    break;
+                                default:    //未匹配
+                                    $resultStr = $this->baseText($postObj);
+                                    break;
+                            }
                         }
                         break;
                     case 'image':   //图片消息
@@ -425,5 +424,78 @@ EOF;
             $resultStr = sprintf($this->_textTpl, $fromUsername, $toUsername, $time, $resultStr);
         }
         return $resultStr;
+    }
+
+    /**
+     * 查询方法
+     *
+     * @access public
+     * @return Typecho_Db_Query
+     */
+    public function selectByOpenid($openid = '')
+    {
+        return $this->db->fetchRow($this->db->select('uid', 'openid', 'nickname', 'status', 'is_send', 'synctime', 'token', 'sendsum')->from('table.wch_users')->where('openid = ?', $openid)->limit(1));
+    }
+    /**
+     * 
+     */
+    private function CmdContent($cmd = '', $openid = '', $status = true)
+    {
+        if(($status===false) && ($CmdContent = $this->redis->get('wechat:cmd:'.$openid))) {
+            $keyword = (string)$cmd;    // 保存用户的关键字
+            $cmd = $CmdContent;         // 即将执行的本次命令
+            $user = $this->selectByOpenid($openid);     //数据库取用户信息
+            if (empty($user)) {
+                return;
+            }
+        }
+        switch ($cmd) {
+            case 'is_send':
+                $str = <<<EOF
+请输入数字指令：
+「91」临时取消 （24小时自动恢复接收）
+「92」停止通知
+「93」开启通知
+
+说明：60秒内指令有效，超时后需重新点击菜单触发指令。
+EOF;
+                if ($status) {                    
+                    $this->redis->set('wechat:cmd:'.$openid, $cmd, 60);     // 指令有效时间
+                    return $str;
+                } else {                    
+                    switch ($keyword) {
+                        case '91':  // 临时取消
+                        case '93':  // 开启通知
+                            $user['is_send'] = ($keyword=='91') ? 1 : 0;
+                            $this->redis->set($user['uid'], $user, 86400);      // 刷新缓存，立即生效
+
+                            // 更新数据库：开启is_send
+                            $this->db->query($this->db
+                            ->update('table.wch_users')
+                            ->rows(array('is_send' => 0))
+                            ->where('uid = ?', $user['uid']));
+
+                            return ($keyword=='91') ? '临时取消模板消息通知，成功！（24小时自动恢复接收）' : '开启模板消息通知，成功！';
+                        case '92':  // 停止通知
+                            $this->redis->delete($user['uid']);                 // 删除缓存，立即生效
+
+                            // 更新数据库：关闭is_send
+                            $this->db->query($this->db
+                            ->update('table.wch_users')
+                            ->rows(array('is_send' => 1))
+                            ->where('uid = ?', $user['uid']));
+
+                            return '停止模板消息通知，成功！';
+                        default:
+                            return '未知指令!'."\n".$str;
+                            break;
+                    }
+                }
+                break;
+            default:
+                # code...
+                break;
+        }
+        return false;
     }
 }

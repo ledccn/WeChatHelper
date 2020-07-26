@@ -97,7 +97,7 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
         //分离用户ID
         $uid = Utils::getUid($token);
         if (empty($uid)) {
-            $result['errcode'] = 404;
+            $result['errcode'] = 401;
             $result['errmsg'] = 'token验证失败。';
             die(Json::encode($result));
         }
@@ -110,7 +110,7 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
             if (empty($userArr)) {
                 //数据库取失败
                 //加入流控：同IP 1分钟失败10次，IP封禁30分钟；同用户 1分钟失败30次，IP封禁30分钟；
-                $result['errcode'] = 404;		//成功是0
+                $result['errcode'] = 401;		//成功是0
                 $result['errmsg'] = 'token验证失败';		//请求成功ok success
                 die(Json::encode($result));
             } else {
@@ -127,12 +127,12 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
                 //验证每天上限500条、同内容5分钟不能重复发送、不同内容1分钟30条、24小时请求超过1000次临时封禁24小时。
             } else {
                 $msg = $userArr['is_send']==1 ? '临时禁用' : '永久禁用';
-                $result['errcode'] = 404;
-                $result['errmsg'] = '账户被'.$msg;
+                $result['errcode'] = 401;
+                $result['errmsg'] = '消息发送被'.$msg;
                 die(Json::encode($result));
             }
         } else {
-            $result['errcode'] = 404;		//成功是0
+            $result['errcode'] = 401;		//成功是0
             $result['errmsg'] = 'token验证失败';	//成功ok
             die(Json::encode($result));
         }
@@ -167,8 +167,6 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
         $result['errcode'] = $code;		//成功是0
         $result['errmsg'] = $msg;	//成功ok
         die(Json::encode($result));
-        //p($this->request->getPathInfo());
-        //p(unserialize(Helper::options()->panelTable));
     }
     /**
      * @brief 微信模板消息读取接口
@@ -199,7 +197,7 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
         //分离用户ID
         $uid = Utils::getUid($hash);
         if (empty($uid)) {
-            $result['errcode'] = 404;
+            $result['errcode'] = 401;
             $result['errmsg'] = 'token验证失败。';
             die(Json::encode($result));
         }
@@ -213,7 +211,7 @@ class WeChatHelper_Widget_Message extends Widget_Abstract
                 //数据库取失败
                 //加入流控：同IP 1分钟失败10次，IP封禁30分钟；同用户 1分钟失败30次，IP封禁30分钟；
                 $result['errcode'] = 404;
-                $result['errmsg'] = 'token验证失败';
+                $result['errmsg'] = '消息有效期3天，过期自动失效！';
                 die(Json::encode($result));
             } else {
                 $json = $message['message'];
