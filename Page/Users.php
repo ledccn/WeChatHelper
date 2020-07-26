@@ -58,7 +58,7 @@ $siteUrl = Helper::options()->siteUrl;
                         </thead>
                         <tbody>
                             <?php Typecho_Widget::widget('WeChatHelper_Widget_Users')->to($users);?>
-                            <?php if($users->have()): ?>
+                            <?php if ($users->have()): ?>
                                 <?php while ($users->next()): ?>
                                     <tr id="users-uid-<?php $users->uid(); ?>">
                                         <td><img src="<?php _e($users->headimgurl) ?>" alt="微信 OpenID：<?php _e($users->openid) ?>" height="32px" width="32px"/></td>
@@ -83,7 +83,7 @@ $siteUrl = Helper::options()->siteUrl;
                     </table>
                 </div>
                 <div class="typecho-list-operate clearfix">
-                    <?php if($users->have()): ?>
+                    <?php if ($users->have()): ?>
                     <ul class="typecho-pager">
                         <?php $users->pageNav(); ?>
                     </ul>

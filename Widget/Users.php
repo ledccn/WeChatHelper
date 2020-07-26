@@ -4,36 +4,49 @@
  *
  * @copyright  Copyright (c) 2013 Binjoo (http://binjoo.net)
  * @license    GNU General Public License 2.0
- * 
+ *
  */
 include_once 'Utils.php';
-class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interface_Do {
-    private $siteUrl, $pageSize, $_currentPage, $_countSql, $_total = false;
+class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interface_Do
+{
+    private $siteUrl;
+    private $pageSize;
+    private $_currentPage;
+    private $_countSql;
+    private $_total = false;
 
-    public function __construct($request, $response, $params = NULL) {
+    public function __construct($request, $response, $params = null)
+    {
         parent::__construct($request, $response, $params);
         $this->siteUrl = Helper::options()->siteUrl;
     }
-    public function getCurrentPage(){
+    public function getCurrentPage()
+    {
         return $this->_currentPage ? $this->_currentPage : 1;
     }
-    public function select() {
+    public function select()
+    {
         return $this->db->select()->from('table.wch_users');
     }
-    public function insert(array $options) {
+    public function insert(array $options)
+    {
         return $this->db->query($this->db->insert('table.wch_users')->rows($options));
     }
-    public function update(array $options, Typecho_Db_Query $condition){
+    public function update(array $options, Typecho_Db_Query $condition)
+    {
         return $this->db->query($condition->update('table.wch_users')->rows($options));
     }
-    public function delete(Typecho_Db_Query $condition){
+    public function delete(Typecho_Db_Query $condition)
+    {
         return $this->db->query($condition->delete('table.wch_users'));
     }
-    public function size(Typecho_Db_Query $condition){
+    public function size(Typecho_Db_Query $condition)
+    {
         return $this->db->fetchObject($condition->select(array('COUNT(table.wch_users.uid)' => 'num'))->from('table.wch_users'))->num;
     }
 
-    public function execute(){
+    public function execute()
+    {
         $this->parameter->setDefault('pageSize=10');
         $this->_currentPage = $this->request->get('page', 1);
 
@@ -48,7 +61,8 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
         $this->db->fetchAll($select, array($this, 'push'));
     }
 
-    public function filter(array $value) {
+    public function filter(array $value)
+    {
         $date = new Typecho_Date($value['subscribe_time']);
         $value['subscribeFormat'] = $date->format('Y-m-d H:i:s');
 
@@ -67,13 +81,13 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
         }
 
         $value['address'] = $value['country'] . ',' . $value['province'] . ',' . $value['city'];
-        if($value['address'] == ',,'){
+        if ($value['address'] == ',,') {
             $value['address'] = '';
         }
 
-        if($value['headimgurl']){
+        if ($value['headimgurl']) {
             #
-        }else{
+        } else {
             $value['headimgurl'] = Helper::options()->pluginUrl .'/WeChatHelper/Images/UserHeadDefault.jpg';
         }
 
@@ -82,7 +96,8 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
         return $value;
     }
 
-    public function push(array $value) {
+    public function push(array $value)
+    {
         $value = $this->filter($value);
         return parent::push($value);
     }
@@ -90,7 +105,8 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
     /**
      * 输出分页
      */
-    public function pageNav() {
+    public function pageNav()
+    {
         $query = $this->request->makeUriByRequest('page={page}');
 
         /** 使用盒状分页 */
@@ -105,16 +121,18 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
      * @param string $action 表单动作
      * @return Typecho_Widget_Helper_Form_Element
      */
-    public function form($action = NULL) {
+    public function form($action = null)
+    {
     }
 
     /**
      * 关注事件
      */
-    public function subscribe($postObj){
+    public function subscribe($postObj)
+    {
         $accessToken = Utils::getAccessToken();
         if (!$this->openIdExists((String) $postObj->FromUserName)) {
-            if($accessToken){
+            if ($accessToken) {
                 $result = $this->apiGetUser((String) $postObj->FromUserName, $accessToken);
                 $result = json_decode($result);
                 $user['openid'] = $result->openid;
@@ -129,12 +147,12 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
                 $user['synctime'] = time();
                 $user['created'] = time();
                 $user['status'] = '1';
-            }else{
+            } else {
                 $user = array('openid' => $postObj->FromUserName, 'subscribe_time' => time(), 'created' => time());
             }
             $user['credits'] = isset($this->options->WCH_subscribe_credit) ? $this->options->WCH_subscribe_credit : '0';
             $user['uid'] = $this->insert($user);
-        }else{
+        } else {
             $user['status'] = '1';
             $user['uid'] = $this->update($user, $this->db->sql()->where('openid = ?', (String) $postObj->FromUserName));
         }
@@ -143,25 +161,27 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
     /**
      * 取消关注事件
      */
-    public function unsubscribe($postObj){
+    public function unsubscribe($postObj)
+    {
         if ($this->openIdExists((String) $postObj->FromUserName)) {
             $user['status'] = '0';
             $user['uid'] = $this->update($user, $this->db->sql()->where('openid = ?', (String) $postObj->FromUserName));
         }
     }
     //带参数二维码场景值ID解析
-    public function qrcode($postObj, $EventKey=''){
+    public function qrcode($postObj, $EventKey='')
+    {
         $redis = new Typecho_Cache();
         $fromUsername = $postObj->FromUserName;
         $toUsername = $postObj->ToUserName;
         $time = time();
         $data = $redis->get('qrcode'.$EventKey);
         //$redis->delete('qrcode'.$EventKey);
-        if(empty($EventKey) || empty($data)){
+        if (empty($EventKey) || empty($data)) {
             return '场景值ID获取失败，请重新扫码！';
         }
-        //二维码来源及指令解析        
-        if(isset($data['cmd'])){
+        //二维码来源及指令解析
+        if (isset($data['cmd'])) {
             switch ($data['cmd']) {
                 case 'login':
                     # code...
@@ -173,7 +193,7 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
                     # code...
                     break;
             }
-        }else{
+        } else {
             //查询openid是否存在
             $user = $this->openIdExists($fromUsername);
             if (empty($user)) {
@@ -193,7 +213,7 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
                 $data['token'] = $user['token'];
                 $this->sendMessageByUid($EventKey, $data);
                 return $contentStr;
-            }            
+            }
         }
     }
     /**
@@ -204,18 +224,21 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
     {
         // 建立socket连接到内部推送端口
         $client = stream_socket_client('tcp://127.0.0.1:5678', $errno, $errmsg);
-        if(!$client) return "ERROR: $errno - $errmsg";
+        if (!$client) {
+            return "ERROR: $errno - $errmsg";
+        }
         // 发送数据，注意5678端口是Text协议的端口，Text协议需要在数据末尾加上换行符
         fwrite($client, json_encode($message)."\n");
         // 读取推送结果
         //$ret = fread($client, 8192);
-        fclose($client);      
+        fclose($client);
         return 'ok';
     }
     /**
      * 判断OpenId是否存在
      */
-    public function openIdExists($openid){
+    public function openIdExists($openid)
+    {
         $select = $this->select()->where('openid = ?', $openid)->limit(1);
         return $this->db->fetchRow($select);
     }
@@ -223,9 +246,10 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
     /**
      * 同步微信用户
      */
-    public function syncUserList(){
+    public function syncUserList()
+    {
         $accessToken = Utils::getAccessToken();
-        if(!$accessToken){
+        if (!$accessToken) {
             $this->widget('Widget_Notice')->set(_t('对不起，更新微信关注者数据失败，请重试！'), 'error');
             $this->response->redirect(Helper::url('WeChatHelper/Page/Users.php&page='.$this->_currentPage));
         }
@@ -253,10 +277,10 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
             $user['synctime'] = time();
             */
             $exists = $this->openIdExists($val);
-            if($exists){
+            if ($exists) {
                 $user['status'] = '1';
                 $user['uid'] = $this->update($user, $this->db->sql()->where('openid = ?', $val));
-            }else{
+            } else {
                 $user['openid'] = $val;
                 $user['created'] = time();
                 $user['uid'] = $this->insert($user);
@@ -271,7 +295,8 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
      * 同步微信用户信息
      * https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140839
      */
-    public function syncUserInfo(){
+    public function syncUserInfo()
+    {
         $uid = $this->request->get('uid');
         $user = $this->db->fetchRow($this->select()->where('uid = ?', $uid)->limit(1));
 
@@ -286,7 +311,7 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
         }
         $result = json_decode($result);
 
-        if($result->subscribe){
+        if ($result->subscribe) {
             $user['status'] = '1';
             $user['openid'] = $result->openid;
             $user['nickname'] = $result->nickname;
@@ -298,7 +323,7 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
             $user['headimgurl'] = $result->headimgurl;
             $user['subscribe_time'] = $result->subscribe_time;
             $user['synctime'] = time();
-        }else{
+        } else {
             $user['status'] = '0';
         }
         $this->update($user, $this->db->sql()->where('uid = ?', $user['uid']));
@@ -308,21 +333,23 @@ class WeChatHelper_Widget_Users extends Widget_Abstract implements Widget_Interf
         $this->response->redirect(Helper::url('WeChatHelper/Page/Users.php&page='.$this->_currentPage));
     }
     //https://mp.weixin.qq.com/wiki?t=resource/res_main&id=mp1421140839
-    public function apiGetUser($openid, $accessToken = NULL){
-        if(!$accessToken){
+    public function apiGetUser($openid, $accessToken = null)
+    {
+        if (!$accessToken) {
             $accessToken = Utils::getAccessToken();
         }
-        if($accessToken){
+        if ($accessToken) {
             $client = Typecho_Http_Client::get();
             $params = array('access_token' => $accessToken, 'openid' => $openid);
             $result = $client->setQuery($params)->send('https://api.weixin.qq.com/cgi-bin/user/info');
-        }else{
+        } else {
             throw new Typecho_Plugin_Exception(_t('对不起，请求AccessToken出现异常。'));
         }
         return $result;
     }
     //动作入口
-    public function action() {
+    public function action()
+    {
         $this->security->protect();
         $this->on($this->request->is('do=syncList'))->syncUserList();
         $this->on($this->request->is('do=syncInfo'))->syncUserInfo();

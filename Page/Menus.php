@@ -53,7 +53,7 @@ $currentUrl = Helper::url("WeChatHelper/Page/Menus.php");
                         </thead>
                         <tbody>
                             <?php Typecho_Widget::widget('WeChatHelper_Widget_Menus')->to($menus);?>
-                            <?php if($menus->have()): ?>
+                            <?php if ($menus->have()): ?>
                                 <?php while ($menus->next()): ?>
                                     <tr id="menus-mid-<?php $menus->mid(); ?>" <?php _e($menus->tr) ?>>
                                         <td><input type="checkbox" value="<?php _e($menus->mid); ?>" name="mid[]" /><input type="hidden" value="<?php _e($menus->level); ?>" name="level[]" /></td>

@@ -4,34 +4,44 @@
  *
  * @copyright  Copyright (c) 2013 Binjoo (http://binjoo.net)
  * @license    GNU General Public License 2.0
- * 
+ *
  */
 include_once 'Utils.php';
-class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interface_Do {
-    private $siteUrl, $_countSql, $_total = false;
+class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interface_Do
+{
+    private $siteUrl;
+    private $_countSql;
+    private $_total = false;
 
-    public function __construct($request, $response, $params = NULL) {
+    public function __construct($request, $response, $params = null)
+    {
         parent::__construct($request, $response, $params);
         $this->siteUrl = Helper::options()->siteUrl;
     }
 
-    public function select() {
+    public function select()
+    {
         return $this->db->select()->from('table.wch_menus');
     }
-    public function insert(array $options) {
+    public function insert(array $options)
+    {
         return $this->db->query($this->db->insert('table.wch_menus')->rows($options));
     }
-    public function update(array $options, Typecho_Db_Query $condition){
+    public function update(array $options, Typecho_Db_Query $condition)
+    {
         return $this->db->query($condition->update('table.wch_menus')->rows($options));
     }
-    public function delete(Typecho_Db_Query $condition){
+    public function delete(Typecho_Db_Query $condition)
+    {
         return $this->db->query($condition->delete('table.wch_menus'));
     }
-    public function size(Typecho_Db_Query $condition){
+    public function size(Typecho_Db_Query $condition)
+    {
         return $this->db->fetchObject($condition->select(array('COUNT(table.wch_menus.uid)' => 'num'))->from('table.wch_menus'))->num;
     }
 
-    public function execute(){
+    public function execute()
+    {
         /** 构建基础查询 */
         $select = $this->select()->from('table.wch_menus');
 
@@ -43,13 +53,15 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         $this->db->fetchAll($select, array($this, 'push'));
     }
 
-    public function filter(array $value) {
+    public function filter(array $value)
+    {
         $value['levelVal'] = $value['level'] == 'button' ? '＃＃' : '└──';
         $value['tr'] = $value['level'] == 'button' ? 'style="background-color: #F0F0EC"' : '';
         return $value;
     }
 
-    public function push(array $value) {
+    public function push(array $value)
+    {
         $value = $this->filter($value);
         return parent::push($value);
     }
@@ -61,7 +73,8 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
      * @param string $action 表单动作
      * @return Typecho_Widget_Helper_Form_Element
      */
-    public function form($action = NULL) {
+    public function form($action = null)
+    {
         if (isset($this->request->mid) && 'insert' != $action) {
             /** 更新模式 */
             $menu = $this->db->fetchRow($this->select()->where('mid = ?', $this->request->mid)->limit(1));
@@ -86,26 +99,39 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         }
         $parent .= '</select>';
 
-        $level = new Typecho_Widget_Helper_Form_Element_Radio('level', 
+        $level = new Typecho_Widget_Helper_Form_Element_Radio(
+            'level',
             array('button' => _t('一级菜单'), 'sub_button' => _t('二级菜单 '.$parent)),
-            'button', _t('菜单级别'), _t('菜单最多包括3个一级菜单，每个一级菜单最多包含5个二级菜单。'));
+            'button',
+            _t('菜单级别'),
+            _t('菜单最多包括3个一级菜单，每个一级菜单最多包含5个二级菜单。')
+        );
         $form->addInput($level->multiMode());
 
-        $name = new Typecho_Widget_Helper_Form_Element_Text('name', NULL, NULL,
-        _t('菜单名称'), _t('一级菜单最多4个汉字，二级最多7个汉字。'));
+        $name = new Typecho_Widget_Helper_Form_Element_Text(
+            'name',
+            null,
+            null,
+            _t('菜单名称'),
+            _t('一级菜单最多4个汉字，二级最多7个汉字。')
+        );
         $form->addInput($name);
 
-        $type = new Typecho_Widget_Helper_Form_Element_Radio('type', array(
-            'click' => _t('发消息'), 
-            'view' => _t('跳转网页'), 
-            'scancode_push' => _t('扫码'), 
-            'scancode_waitmsg' => _t('扫码等待消息'), 
-            'pic_sysphoto' => _t('拍照发图'), 
-            'pic_photo_or_album' => _t('拍照相册'), 
-            'pic_weixin' => _t('微信相册发图'), 
-            'location_select' => _t('地理位置'), 
-            'view_miniprogram' => _t('关联小程序')), 
-            'click', _t('菜单类型'), _t('发消息click：触发关键字，发消息;<br />
+        $type = new Typecho_Widget_Helper_Form_Element_Radio(
+            'type',
+            array(
+            'click' => _t('发消息'),
+            'view' => _t('跳转网页'),
+            'scancode_push' => _t('扫码'),
+            'scancode_waitmsg' => _t('扫码等待消息'),
+            'pic_sysphoto' => _t('拍照发图'),
+            'pic_photo_or_album' => _t('拍照相册'),
+            'pic_weixin' => _t('微信相册发图'),
+            'location_select' => _t('地理位置'),
+            'view_miniprogram' => _t('关联小程序')),
+            'click',
+            _t('菜单类型'),
+            _t('发消息click：触发关键字，发消息;<br />
             跳转网页view：网页链接，点击菜单跳转链接;<br />
             扫码scancode_push：触发关键字，手机扫码二维码;<br />
             扫码等待消息scancode_waitmsg：触发关键字，手机扫码二维码;<br />
@@ -113,28 +139,39 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
             拍照相册pic_photo_or_album：触发关键字，拍照相册发图;<br />
             相册发图pic_weixin：触发关键字，选择图片发图;<br />
             地理位置location_select：触发关键字，弹出地理位置选择;<br />
-            关联小程序view_miniprogram：点击菜单跳转关联的小程序;<br />'));
+            关联小程序view_miniprogram：点击菜单跳转关联的小程序;<br />')
+        );
         $form->addInput($type);
 
-        $value = new Typecho_Widget_Helper_Form_Element_Text('value', NULL, NULL,
-        _t('EventKey & URL值'),NULL);
+        $value = new Typecho_Widget_Helper_Form_Element_Text(
+            'value',
+            null,
+            null,
+            _t('EventKey & URL值'),
+            null
+        );
         $form->addInput($value);
 
-        $order = new Typecho_Widget_Helper_Form_Element_Select('order', 
+        $order = new Typecho_Widget_Helper_Form_Element_Select(
+            'order',
             array('1' => _t('1'),
                   '2' => _t('2'),
                   '3' => _t('3'),
                   '4' => _t('4'),
-                  '5' => _t('5')), '1', _t('排序'), NULL);
+                  '5' => _t('5')),
+            '1',
+            _t('排序'),
+            null
+        );
         $form->addInput($order);
 
-        $do = new Typecho_Widget_Helper_Form_Element_Hidden('do', NULL, NULL);
+        $do = new Typecho_Widget_Helper_Form_Element_Hidden('do', null, null);
         $form->addInput($do);
 
-        $mid = new Typecho_Widget_Helper_Form_Element_Hidden('mid', NULL, NULL);
+        $mid = new Typecho_Widget_Helper_Form_Element_Hidden('mid', null, null);
         $form->addInput($mid);
 
-        $submit = new Typecho_Widget_Helper_Form_Element_Submit(NULL, NULL, NULL);
+        $submit = new Typecho_Widget_Helper_Form_Element_Submit(null, null, null);
         $submit->input->setAttribute('class', 'btn primary');
         $form->addItem($submit);
 
@@ -176,71 +213,76 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         return $form;
     }
 
-    public function checkMaxLength($name, $type){
+    public function checkMaxLength($name, $type)
+    {
         $type = $this->request->get($type);
         $length = 16;
-        if(strlen($name) > $length){
+        if (strlen($name) > $length) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }
 
-    public function checkKeyOrUrl($value, $type){
+    public function checkKeyOrUrl($value, $type)
+    {
         $type = $this->request->get($type);
-        if($type == 'view'){
+        if ($type == 'view') {
             return Typecho_Validate::url($value);
-        }else{
+        } else {
             return true;
         }
     }
 
-    public function checkLevelNum($value, $mid){
+    public function checkLevelNum($value, $mid)
+    {
         $mid = $this->request->get($mid);
         $select = $this->db->sql()->select(array('COUNT(table.wch_menus.mid)' => 'num'))->from('table.wch_menus')->where('level = ?', $value);
-        if($value == 'button'){
-            if($mid){
+        if ($value == 'button') {
+            if ($mid) {
                 $select->where('mid <> ?', $mid);
             }
             $num = $this->db->fetchObject($select)->num;
-            if($num>=3){
+            if ($num>=3) {
                 return false;
-            }else{
+            } else {
                 return true;
             }
-        }else if($value == 'sub_button'){
+        } elseif ($value == 'sub_button') {
             $parent = $this->request->get('parent');
-            if($parent){
+            if ($parent) {
                 $select->where('parent = ?', $parent);
             }
-            if($mid){
+            if ($mid) {
                 $select->where('mid <> ?', $mid);
             }
             $num = $this->db->fetchObject($select)->num;
-            if($num>=5){
+            if ($num>=5) {
                 return false;
-            }else{
+            } else {
                 return true;
             }
         }
     }
 
-    public function checkKeyOrUrlMaxLength($value, $type){
+    public function checkKeyOrUrlMaxLength($value, $type)
+    {
         $type = $this->request->get($type);
         $length = $type == 'click' ? 256 : 128;
-        if(strlen($value) > $length){
+        if (strlen($value) > $length) {
             return false;
-        }else{
+        } else {
             return true;
         }
     }
 
-    public function getParentOrder($menu){
-        if($menu['level'] == 'sub_button'){
+    public function getParentOrder($menu)
+    {
+        if ($menu['level'] == 'sub_button') {
             $select = $this->db->sql()->select(array('table.wch_menus.order' => 'order'))->from('table.wch_menus')->where('mid = ?', $menu['parent']);
             $order = $this->db->fetchObject($select)->order;
             $menu['sort'] = ($order * 10) + $menu['order'];
-        }else{
+        } else {
             $menu['sort'] = $menu['order'] * 10;
             $menu['parent'] = '0';
         }
@@ -253,17 +295,18 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
      * @access public
      * @return void
      */
-    public function orderMenu() {
+    public function orderMenu()
+    {
         $menus = $this->request->filter('int')->getArray('mid');
         $levels = $this->request->getArray('level');
         if ($menus) {
             $parent = 0;
             foreach ($menus as $sort => $mid) {
                 $param = array('order' => $sort + 1);
-                if($levels[$sort] == 'button'){
+                if ($levels[$sort] == 'button') {
                     $parent = $mid;
                     $param['parent'] = '0';
-                }else{
+                } else {
                     $param['parent'] = $parent;
                 }
                 $this->update($param, $this->db->sql()->where('mid = ?', $mid));
@@ -278,9 +321,10 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         }
     }
 
-    public function insertMenu() {
+    public function insertMenu()
+    {
         if ($this->form('insert')->validate()) {
-           $this->response->goBack();
+            $this->response->goBack();
         }
         /** 取出数据 */
         $menu = $this->request->from('level', 'name', 'type', 'value', 'parent', 'order');
@@ -296,9 +340,10 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
-    public function updateMenu() {
+    public function updateMenu()
+    {
         if ($this->form('insert')->validate()) {
-           $this->response->goBack();
+            $this->response->goBack();
         }
         /** 取出数据 */
         $menu = $this->request->from('level', 'name', 'type', 'value', 'parent', 'order', 'mid');
@@ -306,7 +351,7 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
 
         /** 插入数据 */
         $this->db->query($this->update($menu, $this->db->sql()->where('mid = ?', $this->request->filter('int')->mid)));
-        if($menu['level'] == 'button'){
+        if ($menu['level'] == 'button') {
             $this->db->query($this->db->sql()->update('table.wch_menus')->where('parent = ?', $menu['mid'])->expression('sort', ($menu['order'] * 10) . ' + `order` '));
         }
         $this->push($menu);
@@ -316,7 +361,8 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
-    public function deleteMenu() {
+    public function deleteMenu()
+    {
         $menus = $this->request->filter('int')->getArray('mid');
         $deleteCount = 0;
 
@@ -329,16 +375,19 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         }
 
         /** 提示信息 */
-        $this->widget('Widget_Notice')->set($deleteCount > 0 ? _t('自定义菜单已经删除') : _t('没有自定义菜单被删除'),
-        $deleteCount > 0 ? 'success' : 'notice');
+        $this->widget('Widget_Notice')->set(
+            $deleteCount > 0 ? _t('自定义菜单已经删除') : _t('没有自定义菜单被删除'),
+            $deleteCount > 0 ? 'success' : 'notice'
+        );
 
         /** 转向原页 */
         $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
-    public function createMenu(){
+    public function createMenu()
+    {
         $accessToken = Utils::getAccessToken();
-        if(!$accessToken){
+        if (!$accessToken) {
             $this->widget('Widget_Notice')->set('获取Access Token异常！', 'error');
             $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
         }
@@ -358,7 +407,7 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
                 $button['type'] = urlencode($row['type']);
                 $button['name'] = urlencode($row['name']);
                 $button[$row['type'] == 'view' ? 'url' : 'key'] = urlencode($row['value']);
-            }else{
+            } else {
                 $button['name'] = urlencode($row['name']);
                 $tmp = array();
                 foreach ($subButtons as $row) {
@@ -385,17 +434,18 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         }
 
         $result = json_decode($response);
-        if($result->errcode){
+        if ($result->errcode) {
             $this->widget('Widget_Notice')->set(_t('对不起，创建自定义菜单失败，错误原因：'.$result->errmsg), 'notice');
-        }else{
+        } else {
             $this->widget('Widget_Notice')->set(_t('恭喜您，创建自定义菜单成功！'), 'success');
         }
         $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
-    public function removeMenu(){
+    public function removeMenu()
+    {
         $accessToken = Utils::getAccessToken();
-        if(!$accessToken){
+        if (!$accessToken) {
             $this->widget('Widget_Notice')->set('获取Access Token异常！', 'error');
             $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
         }
@@ -410,15 +460,16 @@ class WeChatHelper_Widget_Menus extends Widget_Abstract implements Widget_Interf
         }
 
         $result = json_decode($response);
-        if($result->errcode){
+        if ($result->errcode) {
             $this->widget('Widget_Notice')->set(_t('对不起，删除自定义菜单失败，错误原因：'.$result->errmsg), 'notice');
-        }else{
+        } else {
             $this->widget('Widget_Notice')->set(_t('恭喜您，删除自定义菜单成功！'), 'success');
         }
         $this->response->redirect(Helper::url('WeChatHelper/Page/Menus.php'));
     }
 
-    public function action() {
+    public function action()
+    {
         $this->security->protect();
         $this->on($this->request->is('do=insert'))->insertMenu();
         $this->on($this->request->is('do=update'))->updateMenu();
