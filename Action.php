@@ -160,7 +160,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                                 $str = $this->CmdContent('is_send', $fromUsername);
                                 $resultStr = $this->baseText($postObj, $str);
                                 break;
-                            default:                                
+                            default:
                                 # code...
                                 break;
                         }
@@ -202,7 +202,7 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
                 switch ($msgType) {
                     case 'text':   //文本信息
                         $keyword = trim($postObj->Content);
-                        // 上下文指令匹配                        
+                        // 上下文指令匹配
                         $ret = $this->CmdContent($keyword, $fromUsername, false);
                         if (is_string($ret)) {
                             $resultStr = $this->baseText($postObj, $ret);
@@ -437,11 +437,11 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
         return $this->db->fetchRow($this->db->select('uid', 'openid', 'nickname', 'status', 'is_send', 'synctime', 'token', 'sendsum')->from('table.wch_users')->where('openid = ?', $openid)->limit(1));
     }
     /**
-     * 
+     *
      */
     private function CmdContent($cmd = '', $openid = '', $status = true)
     {
-        if(($status===false) && ($CmdContent = $this->redis->get('wechat:cmd:'.$openid))) {
+        if (($status===false) && ($CmdContent = $this->redis->get('wechat:cmd:'.$openid))) {
             $keyword = (string)$cmd;    // 保存用户的关键字
             $cmd = $CmdContent;         // 即将执行的本次命令
             $user = $this->selectByOpenid($openid);     //数据库取用户信息
@@ -459,10 +459,10 @@ class WeChatHelper_Action extends Typecho_Widget implements Widget_Interface_Do
 
 说明：60秒内指令有效，超时后需重新点击菜单触发指令。
 EOF;
-                if ($status) {                    
+                if ($status) {
                     $this->redis->set('wechat:cmd:'.$openid, $cmd, 60);     // 指令有效时间
                     return $str;
-                } else {                    
+                } else {
                     switch ($keyword) {
                         case '91':  // 临时取消
                         case '93':  // 开启通知
